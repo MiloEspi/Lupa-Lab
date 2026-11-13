@@ -1,0 +1,21 @@
+# Servicios para desarrollo. El backend y el front corren fuera de Docker (más rápido
+# para recargar); acá solo la base de datos.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: lupalab
+      POSTGRES_USER: lupalab
+      POSTGRES_PASSWORD: lupalab
+    # 5433 para no chocar con un Postgres instalado en la máquina.
+    ports: ["5433:5432"]
+    volumes: [db:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lupalab"]
+      interval: 3s
+      retries: 20
+
+  # El almacenamiento de archivos (R2 o un equivalente local) se suma en la S8.
+
+volumes:
+  db:

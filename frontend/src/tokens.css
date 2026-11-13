@@ -1,0 +1,28 @@
+/*
+ * Tokens de color del prototipo de Ocludent. Cuatro paletas candidatas, una por clase.
+ * Contraste medido con WCAG 2.1: todo texto >= 4,5:1 contra su fondo, bordes de controles
+ * (--ctl) >= 3:1 contra la tarjeta, foco (--fo) >= 4,5:1 contra el fondo.
+ * Nunca blanco puro de fondo: el equipo mira la pantalla 6 horas por día.
+ *
+ * --bg   fondo de la página        --bg2  fondo de grupos y barras
+ * --sf   tarjeta                   --sf2  inset dentro de una tarjeta
+ * --ln   borde decorativo          --ctl  borde de controles (campos, botones)
+ * --ink  texto principal           --ink2 texto secundario   --ink3 texto terciario
+ * --ac   color de acción (fondo)   --acI  texto sobre --ac   --acT  acción como texto
+ * --acS  acción suave (fondo de seleccionado)
+ * --ok/--okS listo · --wa/--waS atención · --ba/--baS problema · --in/--inS información
+ * --fo   contorno de foco          --st1/--st2 degradado del visor de escaneo
+ */
+
+.t-marfil{--bg:#F3F2EE;--bg2:#E9E7E1;--sf:#FFFFFF;--sf2:#F7F6F2;--ln:#DFDCD4;--ctl:#80889A;--ink:#18202C;--ink2:#475163;--ink3:#5B6474;--ac:#1F5BD8;--acI:#FFFFFF;--acT:#1B50C2;--acS:#E9EFFC;--ok:#1B7347;--okS:#E4F2E9;--wa:#8A5300;--waS:#FBEFD9;--ba:#B3261E;--baS:#FBE9E7;--in:#0B6F8C;--inS:#E1F1F6;--fo:#1F5BD8;--st1:#FFFFFF;--st2:#E3E6EB}
+
+/* Grafito: tarjetas de vidrio sobre gris mate. El celeste neón va de fondo con texto oscuro;
+   como texto o foco se usa #006A82. */
+.t-grafito{--bg:#D8DCE0;--bg2:#C9CED4;--sf:rgba(255,255,255,.74);--sf2:rgba(255,255,255,.5);--ln:rgba(19,25,32,.12);--ctl:#6E7782;--ink:#131920;--ink2:#3D4752;--ink3:#4F5964;--ac:#12C6EA;--acI:#04222B;--acT:#006A82;--acS:#D5F2F8;--ok:#1B7347;--okS:#E0EFE6;--wa:#7F4C00;--waS:#F4E7CF;--ba:#A8231B;--baS:#F3E1DF;--in:#006A82;--inS:#D5F2F8;--fo:#006A82;--st1:#F4F6F7;--st2:#C7CDD3;--gl:blur(20px) saturate(1.3)}
+
+.t-porcelana{--bg:#F1F4F2;--bg2:#E5EBE7;--sf:#FFFFFF;--sf2:#F5F8F6;--ln:#D7E0DB;--ctl:#7E8B84;--ink:#13201B;--ink2:#41504A;--ink3:#54635C;--ac:#0E7268;--acI:#FFFFFF;--acT:#0D675E;--acS:#E1F1EE;--ok:#1B7347;--okS:#E4F2E9;--wa:#8A5300;--waS:#FBEFD9;--ba:#B3261E;--baS:#FBE9E7;--in:#0B6F8C;--inS:#E1F1F6;--fo:#0E7268;--st1:#FFFFFF;--st2:#DDE5E0}
+
+.t-niebla{--bg:#EDEFF5;--bg2:#E1E4EE;--sf:#FFFFFF;--sf2:#F5F6FA;--ln:#D9DCE7;--ctl:#82879E;--ink:#191C2C;--ink2:#474C63;--ink3:#585E77;--ac:#4B44D6;--acI:#FFFFFF;--acT:#433CC4;--acS:#ECEBFC;--ok:#1B7347;--okS:#E4F2E9;--wa:#8A5300;--waS:#FBEFD9;--ba:#B3261E;--baS:#FBE9E7;--in:#0B6F8C;--inS:#E1F1F6;--fo:#4B44D6;--st1:#FFFFFF;--st2:#E0E3ED}
+
+/* Colores del diente (iguales en todas las paletas, imitan el odontograma de Lupa) */
+:root{--diente:#FFFDF9;--diente-borde:#A39A8B;--raiz:#F3EEE5;--pulpa:#E58C8C;--encia:#DB6D70;--hueso:rgba(222,192,132,.26);--munon:#CFC5B6}

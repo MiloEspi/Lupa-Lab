@@ -1,0 +1,827 @@
+openapi: 3.0.3
+info:
+  title: Lupa Lab API
+  version: 0.1.0
+paths:
+  /api/auditoria/eventos:
+    get:
+      operationId: auditoria_eventos_list
+      description: Los últimos movimientos del laboratorio. Solo Administración y
+        Supervisión.
+      parameters:
+      - in: query
+        name: objeto_id
+        schema:
+          type: string
+        description: Solo lo de un objeto
+      tags:
+      - auditoria
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Evento'
+          description: ''
+  /api/auth/contrasena:
+    post:
+      operationId: auth_contrasena_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarPasswordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CambiarPasswordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CambiarPasswordRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/csrf:
+    get:
+      operationId: auth_csrf_retrieve
+      description: El front lo pide al arrancar para tener la cookie CSRF antes del
+        primer POST.
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/auth/ingresar:
+    post:
+      operationId: auth_ingresar_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngresarRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IngresarRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IngresarRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Yo'
+          description: ''
+  /api/auth/invitaciones/{token}:
+    get:
+      operationId: auth_invitaciones_retrieve
+      description: Lo que ve quien abre el link de la invitación, antes de tener usuario.
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitacionPublica'
+          description: ''
+    post:
+      operationId: auth_invitaciones_create
+      description: Lo que ve quien abre el link de la invitación, antes de tener usuario.
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AceptarInvitacionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AceptarInvitacionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AceptarInvitacionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Yo'
+          description: ''
+  /api/auth/laboratorio:
+    post:
+      operationId: auth_laboratorio_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ElegirLaboratorioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ElegirLaboratorioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ElegirLaboratorioRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Yo'
+          description: ''
+  /api/auth/recuperar:
+    post:
+      operationId: auth_recuperar_create
+      description: 'Contesta lo mismo exista o no el mail: no le dice a nadie quién
+        tiene cuenta.'
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecuperarRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecuperarRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecuperarRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/auth/restablecer:
+    post:
+      operationId: auth_restablecer_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestablecerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RestablecerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RestablecerRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/auth/salir:
+    post:
+      operationId: auth_salir_create
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/sesiones:
+    get:
+      operationId: auth_sesiones_list
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sesion'
+          description: ''
+  /api/auth/sesiones/{id}:
+    delete:
+      operationId: auth_sesiones_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/yo:
+    get:
+      operationId: auth_yo_retrieve
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Yo'
+          description: ''
+  /api/equipo/invitaciones:
+    get:
+      operationId: equipo_invitaciones_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - equipo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invitacion'
+          description: ''
+    post:
+      operationId: equipo_invitaciones_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - equipo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitacionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InvitacionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InvitacionRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitacion'
+          description: ''
+  /api/equipo/invitaciones/{id}:
+    delete:
+      operationId: equipo_invitaciones_destroy
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - equipo
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/equipo/miembros:
+    get:
+      operationId: equipo_miembros_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - equipo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Miembro'
+          description: ''
+  /api/equipo/miembros/{id}:
+    patch:
+      operationId: equipo_miembros_partial_update
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - equipo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMiembroCambioRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMiembroCambioRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMiembroCambioRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Miembro'
+          description: ''
+  /api/salud:
+    get:
+      operationId: salud_retrieve
+      tags:
+      - salud
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Salud'
+          description: ''
+components:
+  schemas:
+    AceptarInvitacionRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 80
+        apellido:
+          type: string
+          maxLength: 80
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+    CambiarPasswordRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        actual:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - actual
+      - password
+    ElegirLaboratorioRequest:
+      type: object
+      properties:
+        laboratorio:
+          type: string
+          format: uuid
+      required:
+      - laboratorio
+    Evento:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        cuando:
+          type: string
+          format: date-time
+          readOnly: true
+        nombre_usuario:
+          type: string
+          maxLength: 200
+        accion:
+          type: string
+          maxLength: 60
+        objeto_tipo:
+          type: string
+          maxLength: 60
+        objeto_id:
+          type: string
+          maxLength: 64
+        antes:
+          nullable: true
+        despues:
+          nullable: true
+      required:
+      - accion
+      - cuando
+      - id
+    IngresarRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+    Invitacion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        nombre:
+          type: string
+          maxLength: 80
+        apellido:
+          type: string
+          maxLength: 80
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolesEnum'
+        vence:
+          type: string
+          format: date-time
+          readOnly: true
+        aceptada:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        vigente:
+          type: boolean
+          readOnly: true
+        creado:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - aceptada
+      - creado
+      - email
+      - id
+      - roles
+      - vence
+      - vigente
+    InvitacionPublica:
+      type: object
+      properties:
+        laboratorio:
+          type: string
+        email:
+          type: string
+          format: email
+        nombre:
+          type: string
+        apellido:
+          type: string
+        ya_tiene_usuario:
+          type: boolean
+      required:
+      - apellido
+      - email
+      - laboratorio
+      - nombre
+      - ya_tiene_usuario
+    InvitacionRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        nombre:
+          type: string
+          maxLength: 80
+        apellido:
+          type: string
+          maxLength: 80
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolesEnum'
+      required:
+      - email
+      - roles
+    Laboratorio:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 120
+      required:
+      - id
+      - nombre
+    MembresiaPropia:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        laboratorio:
+          $ref: '#/components/schemas/Laboratorio'
+        tipo:
+          allOf:
+          - $ref: '#/components/schemas/TipoEnum'
+          readOnly: true
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolesEnum'
+          readOnly: true
+      required:
+      - id
+      - laboratorio
+      - roles
+      - tipo
+    Miembro:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        usuario:
+          allOf:
+          - $ref: '#/components/schemas/Usuario'
+          readOnly: true
+        tipo:
+          allOf:
+          - $ref: '#/components/schemas/TipoEnum'
+          readOnly: true
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolesEnum'
+        activa:
+          type: boolean
+        creado:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - creado
+      - id
+      - tipo
+      - usuario
+    PatchedMiembroCambioRequest:
+      type: object
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolesEnum'
+        activa:
+          type: boolean
+    RecuperarRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+    RestablecerRequest:
+      type: object
+      properties:
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        uid:
+          type: string
+          minLength: 1
+        token:
+          type: string
+          minLength: 1
+      required:
+      - password
+      - token
+      - uid
+    RolDisponible:
+      type: object
+      properties:
+        valor:
+          type: string
+        nombre:
+          type: string
+      required:
+      - nombre
+      - valor
+    RolesEnum:
+      enum:
+      - recepcion
+      - revision
+      - cad
+      - produccion
+      - control
+      - supervision
+      - administracion
+      type: string
+      description: |-
+        * `recepcion` - Recepción
+        * `revision` - Revisión técnica
+        * `cad` - CAD
+        * `produccion` - Producción
+        * `control` - Control
+        * `supervision` - Supervisión
+        * `administracion` - Administración
+    Salud:
+      type: object
+      properties:
+        estado:
+          type: string
+      required:
+      - estado
+    Sesion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        agente:
+          type: string
+          readOnly: true
+        ip:
+          type: string
+          readOnly: true
+          nullable: true
+        creada:
+          type: string
+          format: date-time
+          readOnly: true
+        ultimo_uso:
+          type: string
+          format: date-time
+          readOnly: true
+        esta:
+          type: boolean
+          readOnly: true
+          description: Es la sesión desde la que se hace el pedido.
+      required:
+      - agente
+      - creada
+      - esta
+      - id
+      - ip
+      - ultimo_uso
+    TipoEnum:
+      enum:
+      - equipo
+      - odontologo
+      type: string
+      description: |-
+        * `equipo` - Equipo del laboratorio
+        * `odontologo` - Odontólogo
+    Usuario:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+          title: Mail
+        nombre:
+          type: string
+          readOnly: true
+        apellido:
+          type: string
+          readOnly: true
+        nombre_visible:
+          type: string
+          readOnly: true
+      required:
+      - apellido
+      - email
+      - id
+      - nombre
+      - nombre_visible
+    Yo:
+      type: object
+      properties:
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+        membresias:
+          type: array
+          items:
+            $ref: '#/components/schemas/MembresiaPropia'
+        membresia_activa:
+          allOf:
+          - $ref: '#/components/schemas/MembresiaPropia'
+          nullable: true
+        permisos:
+          type: array
+          items:
+            type: string
+        roles_disponibles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolDisponible'
+      required:
+      - membresia_activa
+      - membresias
+      - permisos
+      - roles_disponibles
+      - usuario
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
