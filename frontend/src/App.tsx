@@ -1,6 +1,8 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router'
 import { puede, useYo } from './lib/sesion'
 import { AceptarInvitacion, ElegirLaboratorio, Ingresar, Recuperar, Restablecer } from './pantallas/cuentas'
+import { CatalogoPantalla } from './pantallas/catalogo'
+import { Directorio } from './pantallas/directorio'
 import { Equipo } from './pantallas/equipo'
 import { Actividad, Inicio, Perfil } from './pantallas/inicio'
 import { ConSesion } from './ui/con-sesion'
@@ -38,6 +40,8 @@ export function App() {
       >
         <Route index element={<Inicio />} />
         <Route path="perfil" element={<Perfil />} />
+        <Route path="clientes" element={<Directorio />} />
+        <Route path="catalogo" element={<CatalogoPantalla />} />
         <Route element={<ConPermiso accion="gestionar_equipo" />}>
           <Route path="equipo" element={<Equipo />} />
         </Route>

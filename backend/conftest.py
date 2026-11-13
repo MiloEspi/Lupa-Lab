@@ -60,3 +60,21 @@ def entrar(cliente):
         return respuesta
 
     return entrar_como
+
+
+@pytest.fixture
+def catalogo(laboratorio):
+    from catalogo.semilla import cargar_catalogo
+
+    cargar_catalogo(laboratorio)
+    return laboratorio
+
+
+@pytest.fixture
+def cliente_y_profesional(laboratorio):
+    from directorio.models import Cliente, Profesional
+
+    clinica = Cliente.objects.create(laboratorio=laboratorio, razon_social='Clínica Gómez')
+    profesional = Profesional.objects.create(laboratorio=laboratorio, nombre='Julián', apellido='Gómez')
+    profesional.clientes.add(clinica)
+    return clinica, profesional

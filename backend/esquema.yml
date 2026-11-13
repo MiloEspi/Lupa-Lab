@@ -275,6 +275,796 @@ paths:
               schema:
                 $ref: '#/components/schemas/Yo'
           description: ''
+  /api/casos:
+    get:
+      operationId: casos_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: query
+        name: cliente
+        schema:
+          type: string
+      - in: query
+        name: estado
+        schema:
+          type: string
+          enum:
+          - abierto
+          - cancelado
+          - entregado
+      - in: query
+        name: limit
+        schema:
+          type: integer
+      - in: query
+        name: offset
+        schema:
+          type: integer
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Número, paciente, cliente o profesional
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Caso'
+          description: ''
+    post:
+      operationId: casos_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - casos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CasoNuevoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CasoNuevoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CasoNuevoRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+          description: ''
+  /api/casos/{id}:
+    get:
+      operationId: casos_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+          description: ''
+  /api/casos/{id}/cancelar:
+    post:
+      operationId: casos_cancelar_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelarRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CancelarRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CancelarRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+          description: ''
+  /api/casos/{id}/entregar:
+    post:
+      operationId: casos_entregar_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+          description: ''
+  /api/casos/{id}/trabajos/{trabajo}/avanzar:
+    post:
+      operationId: casos_trabajos_avanzar_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: trabajo
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+          description: ''
+  /api/catalogo:
+    get:
+      operationId: catalogo_retrieve
+      description: 'Todo el catálogo de una vez: son decenas de filas, no vale paginar.'
+      tags:
+      - catalogo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Catalogo'
+          description: ''
+  /api/catalogo/checklists:
+    get:
+      operationId: catalogo_checklists_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - catalogo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlantillaChecklist'
+          description: ''
+    post:
+      operationId: catalogo_checklists_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - catalogo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlantillaChecklistRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlantillaChecklistRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlantillaChecklistRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantillaChecklist'
+          description: ''
+  /api/catalogo/checklists/{id}:
+    get:
+      operationId: catalogo_checklists_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalogo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantillaChecklist'
+          description: ''
+    patch:
+      operationId: catalogo_checklists_partial_update
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalogo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlantillaChecklistRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPlantillaChecklistRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPlantillaChecklistRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantillaChecklist'
+          description: ''
+  /api/catalogo/familias:
+    get:
+      operationId: catalogo_familias_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - catalogo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Familia'
+          description: ''
+    post:
+      operationId: catalogo_familias_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - catalogo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FamiliaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FamiliaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FamiliaRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Familia'
+          description: ''
+  /api/catalogo/familias/{id}:
+    get:
+      operationId: catalogo_familias_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalogo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Familia'
+          description: ''
+    patch:
+      operationId: catalogo_familias_partial_update
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalogo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFamiliaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFamiliaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFamiliaRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Familia'
+          description: ''
+  /api/catalogo/items:
+    get:
+      operationId: catalogo_items_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - catalogo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+          description: ''
+    post:
+      operationId: catalogo_items_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - catalogo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ItemRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+  /api/catalogo/items/{id}:
+    get:
+      operationId: catalogo_items_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalogo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+    patch:
+      operationId: catalogo_items_partial_update
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalogo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedItemRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedItemRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedItemRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+          description: ''
+  /api/catalogo/rutas:
+    get:
+      operationId: catalogo_rutas_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - catalogo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlantillaEtapas'
+          description: ''
+    post:
+      operationId: catalogo_rutas_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - catalogo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlantillaEtapasRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlantillaEtapasRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlantillaEtapasRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantillaEtapas'
+          description: ''
+  /api/catalogo/rutas/{id}:
+    get:
+      operationId: catalogo_rutas_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalogo
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantillaEtapas'
+          description: ''
+    patch:
+      operationId: catalogo_rutas_partial_update
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - catalogo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlantillaEtapasRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPlantillaEtapasRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPlantillaEtapasRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlantillaEtapas'
+          description: ''
+  /api/clientes:
+    get:
+      operationId: clientes_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: query
+        name: activos
+        schema:
+          type: boolean
+        description: Por defecto solo los activos
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Busca sin importar tildes ni mayúsculas
+      tags:
+      - clientes
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cliente'
+          description: ''
+    post:
+      operationId: clientes_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - clientes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClienteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ClienteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ClienteRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+          description: ''
+  /api/clientes/{id}:
+    get:
+      operationId: clientes_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - clientes
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+          description: ''
+    patch:
+      operationId: clientes_partial_update
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - clientes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedClienteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedClienteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedClienteRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cliente'
+          description: ''
   /api/equipo/invitaciones:
     get:
       operationId: equipo_invitaciones_list
@@ -406,6 +1196,134 @@ paths:
               schema:
                 $ref: '#/components/schemas/Miembro'
           description: ''
+  /api/profesionales:
+    get:
+      operationId: profesionales_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: query
+        name: activos
+        schema:
+          type: boolean
+        description: Por defecto solo los activos
+      - in: query
+        name: cliente
+        schema:
+          type: string
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Busca sin importar tildes ni mayúsculas
+      tags:
+      - profesionales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Profesional'
+          description: ''
+    post:
+      operationId: profesionales_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - profesionales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfesionalRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfesionalRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfesionalRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profesional'
+          description: ''
+  /api/profesionales/{id}:
+    get:
+      operationId: profesionales_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - profesionales
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profesional'
+          description: ''
+    patch:
+      operationId: profesionales_partial_update
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - profesionales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfesionalRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfesionalRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfesionalRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profesional'
+          description: ''
   /api/salud:
     get:
       operationId: salud_retrieve
@@ -437,6 +1355,9 @@ components:
           minLength: 1
       required:
       - password
+    BlankEnum:
+      enum:
+      - ''
     CambiarPasswordRequest:
       type: object
       properties:
@@ -451,6 +1372,240 @@ components:
       required:
       - actual
       - password
+    CancelarRequest:
+      type: object
+      properties:
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - motivo
+    Caso:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        numero:
+          type: integer
+          readOnly: true
+        codigo:
+          type: string
+          readOnly: true
+        cliente:
+          allOf:
+          - $ref: '#/components/schemas/PersonaResumen'
+          readOnly: true
+        profesional:
+          allOf:
+          - $ref: '#/components/schemas/PersonaResumen'
+          readOnly: true
+        paciente:
+          type: string
+          readOnly: true
+        fecha_ingreso:
+          type: string
+          format: date
+          readOnly: true
+        fecha_prometida:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+        estado:
+          allOf:
+          - $ref: '#/components/schemas/CasoEstadoEnum'
+          readOnly: true
+        observaciones:
+          type: string
+          readOnly: true
+        motivo_cancelacion:
+          type: string
+          readOnly: true
+        creado:
+          type: string
+          format: date-time
+          readOnly: true
+        trabajos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Trabajo'
+          readOnly: true
+      required:
+      - cliente
+      - codigo
+      - creado
+      - estado
+      - fecha_ingreso
+      - fecha_prometida
+      - id
+      - motivo_cancelacion
+      - numero
+      - observaciones
+      - paciente
+      - profesional
+      - trabajos
+    CasoEstadoEnum:
+      enum:
+      - abierto
+      - entregado
+      - cancelado
+      type: string
+      description: |-
+        * `abierto` - Abierto
+        * `entregado` - Entregado
+        * `cancelado` - Cancelado
+    CasoNuevoRequest:
+      type: object
+      properties:
+        cliente:
+          type: string
+          format: uuid
+        profesional:
+          type: string
+          format: uuid
+        paciente:
+          type: string
+          default: ''
+          description: 'Solo iniciales: son datos de salud.'
+          maxLength: 12
+        fecha_prometida:
+          type: string
+          format: date
+          nullable: true
+        observaciones:
+          type: string
+          default: ''
+        trabajos:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrabajoNuevoRequest'
+      required:
+      - cliente
+      - profesional
+      - trabajos
+    Catalogo:
+      type: object
+      properties:
+        familias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Familia'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        plantillas_etapas:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlantillaEtapas'
+        plantillas_checklist:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlantillaChecklist'
+      required:
+      - familias
+      - items
+      - plantillas_checklist
+      - plantillas_etapas
+    Cliente:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        razon_social:
+          type: string
+          title: Razón social o nombre
+          maxLength: 160
+        cuit:
+          type: string
+          maxLength: 20
+        telefono:
+          type: string
+          maxLength: 40
+        whatsapp:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        direccion:
+          type: string
+          title: Dirección
+          maxLength: 200
+        notas:
+          type: string
+        activo:
+          type: boolean
+      required:
+      - id
+      - razon_social
+    ClienteRequest:
+      type: object
+      properties:
+        razon_social:
+          type: string
+          minLength: 1
+          title: Razón social o nombre
+          maxLength: 160
+        cuit:
+          type: string
+          maxLength: 20
+        telefono:
+          type: string
+          maxLength: 40
+        whatsapp:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        direccion:
+          type: string
+          title: Dirección
+          maxLength: 200
+        notas:
+          type: string
+        activo:
+          type: boolean
+      required:
+      - razon_social
+    ClienteResumen:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        razon_social:
+          type: string
+          title: Razón social o nombre
+          maxLength: 160
+      required:
+      - id
+      - razon_social
+    ClienteResumenRequest:
+      type: object
+      properties:
+        razon_social:
+          type: string
+          minLength: 1
+          title: Razón social o nombre
+          maxLength: 160
+      required:
+      - razon_social
     ElegirLaboratorioRequest:
       type: object
       properties:
@@ -459,6 +1614,74 @@ components:
           format: uuid
       required:
       - laboratorio
+    Etapa:
+      type: object
+      properties:
+        orden:
+          type: integer
+          readOnly: true
+        nombre:
+          type: string
+          readOnly: true
+        rol:
+          allOf:
+          - $ref: '#/components/schemas/Rol'
+          readOnly: true
+        en_consultorio:
+          type: boolean
+          readOnly: true
+        estado:
+          allOf:
+          - $ref: '#/components/schemas/EtapaEstadoEnum'
+          readOnly: true
+        inicio:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        fin:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        hecha_por:
+          type: string
+          readOnly: true
+      required:
+      - en_consultorio
+      - estado
+      - fin
+      - hecha_por
+      - inicio
+      - nombre
+      - orden
+      - rol
+    EtapaActual:
+      type: object
+      properties:
+        orden:
+          type: integer
+        nombre:
+          type: string
+        rol:
+          type: string
+        total:
+          type: integer
+      required:
+      - nombre
+      - orden
+      - rol
+      - total
+    EtapaEstadoEnum:
+      enum:
+      - pendiente
+      - en_curso
+      - hecha
+      type: string
+      description: |-
+        * `pendiente` - Pendiente
+        * `en_curso` - En curso
+        * `hecha` - Hecha
     Evento:
       type: object
       properties:
@@ -490,6 +1713,56 @@ components:
       - accion
       - cuando
       - id
+    Familia:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 80
+        letra:
+          type: string
+          maxLength: 2
+        color:
+          type: string
+          maxLength: 7
+        orden:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        activa:
+          type: boolean
+      required:
+      - id
+      - letra
+      - nombre
+    FamiliaRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        letra:
+          type: string
+          minLength: 1
+          maxLength: 2
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        orden:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        activa:
+          type: boolean
+      required:
+      - letra
+      - nombre
     IngresarRequest:
       type: object
       properties:
@@ -523,7 +1796,7 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/RolesEnum'
+            $ref: '#/components/schemas/Rol'
         vence:
           type: string
           format: date-time
@@ -585,10 +1858,93 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/RolesEnum'
+            $ref: '#/components/schemas/Rol'
       required:
       - email
       - roles
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        familia:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+          maxLength: 120
+        codigo:
+          type: string
+          title: Código
+          maxLength: 20
+        materiales:
+          type: array
+          items:
+            type: string
+            maxLength: 60
+        datos_pedidos:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+        plantilla_etapas:
+          type: string
+          format: uuid
+        plantilla_checklist:
+          type: string
+          format: uuid
+          nullable: true
+        activo:
+          type: boolean
+      required:
+      - codigo
+      - familia
+      - id
+      - nombre
+      - plantilla_etapas
+    ItemRequest:
+      type: object
+      properties:
+        familia:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        codigo:
+          type: string
+          minLength: 1
+          title: Código
+          maxLength: 20
+        materiales:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 60
+        datos_pedidos:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 80
+        plantilla_etapas:
+          type: string
+          format: uuid
+        plantilla_checklist:
+          type: string
+          format: uuid
+          nullable: true
+        activo:
+          type: boolean
+      required:
+      - codigo
+      - familia
+      - nombre
+      - plantilla_etapas
     Laboratorio:
       type: object
       properties:
@@ -618,7 +1974,7 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/RolesEnum'
+            $ref: '#/components/schemas/Rol'
           readOnly: true
       required:
       - id
@@ -643,7 +1999,7 @@ components:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/RolesEnum'
+            $ref: '#/components/schemas/Rol'
         activa:
           type: boolean
         creado:
@@ -655,15 +2011,363 @@ components:
       - id
       - tipo
       - usuario
+    Paso:
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 80
+        rol:
+          $ref: '#/components/schemas/Rol'
+        en_consultorio:
+          type: boolean
+      required:
+      - nombre
+      - rol
+    PasoRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        rol:
+          $ref: '#/components/schemas/Rol'
+        en_consultorio:
+          type: boolean
+      required:
+      - nombre
+      - rol
+    PatchedClienteRequest:
+      type: object
+      properties:
+        razon_social:
+          type: string
+          minLength: 1
+          title: Razón social o nombre
+          maxLength: 160
+        cuit:
+          type: string
+          maxLength: 20
+        telefono:
+          type: string
+          maxLength: 40
+        whatsapp:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        direccion:
+          type: string
+          title: Dirección
+          maxLength: 200
+        notas:
+          type: string
+        activo:
+          type: boolean
+    PatchedFamiliaRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        letra:
+          type: string
+          minLength: 1
+          maxLength: 2
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        orden:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        activa:
+          type: boolean
+    PatchedItemRequest:
+      type: object
+      properties:
+        familia:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        codigo:
+          type: string
+          minLength: 1
+          title: Código
+          maxLength: 20
+        materiales:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 60
+        datos_pedidos:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 80
+        plantilla_etapas:
+          type: string
+          format: uuid
+        plantilla_checklist:
+          type: string
+          format: uuid
+          nullable: true
+        activo:
+          type: boolean
     PatchedMiembroCambioRequest:
       type: object
       properties:
         roles:
           type: array
           items:
-            $ref: '#/components/schemas/RolesEnum'
+            $ref: '#/components/schemas/Rol'
         activa:
           type: boolean
+    PatchedPlantillaChecklistRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        items:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 160
+    PatchedPlantillaEtapasRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        pasos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PasoRequest'
+    PatchedProfesionalRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        apellido:
+          type: string
+          minLength: 1
+          maxLength: 80
+        matricula:
+          type: string
+          title: Matrícula
+          maxLength: 30
+        telefono:
+          type: string
+          maxLength: 40
+        whatsapp:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        clientes:
+          type: array
+          items:
+            type: string
+            format: uuid
+        notas:
+          type: string
+        activo:
+          type: boolean
+    PersonaResumen:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+      required:
+      - id
+      - nombre
+    PlantillaChecklist:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 80
+        items:
+          type: array
+          items:
+            type: string
+            maxLength: 160
+      required:
+      - id
+      - items
+      - nombre
+    PlantillaChecklistRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        items:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 160
+      required:
+      - items
+      - nombre
+    PlantillaEtapas:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 80
+        pasos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Paso'
+      required:
+      - id
+      - nombre
+      - pasos
+    PlantillaEtapasRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        pasos:
+          type: array
+          items:
+            $ref: '#/components/schemas/PasoRequest'
+      required:
+      - nombre
+      - pasos
+    Profesional:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        nombre:
+          type: string
+          maxLength: 80
+        apellido:
+          type: string
+          maxLength: 80
+        nombre_completo:
+          type: string
+          readOnly: true
+        matricula:
+          type: string
+          title: Matrícula
+          maxLength: 30
+        telefono:
+          type: string
+          maxLength: 40
+        whatsapp:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        clientes:
+          type: array
+          items:
+            type: string
+            format: uuid
+        clientes_detalle:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClienteResumen'
+          readOnly: true
+        notas:
+          type: string
+        activo:
+          type: boolean
+      required:
+      - apellido
+      - clientes_detalle
+      - id
+      - nombre
+      - nombre_completo
+    ProfesionalRequest:
+      type: object
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 80
+        apellido:
+          type: string
+          minLength: 1
+          maxLength: 80
+        matricula:
+          type: string
+          title: Matrícula
+          maxLength: 30
+        telefono:
+          type: string
+          maxLength: 40
+        whatsapp:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        clientes:
+          type: array
+          items:
+            type: string
+            format: uuid
+        notas:
+          type: string
+        activo:
+          type: boolean
+      required:
+      - apellido
+      - nombre
     RecuperarRequest:
       type: object
       properties:
@@ -690,17 +2394,7 @@ components:
       - password
       - token
       - uid
-    RolDisponible:
-      type: object
-      properties:
-        valor:
-          type: string
-        nombre:
-          type: string
-      required:
-      - nombre
-      - valor
-    RolesEnum:
+    Rol:
       enum:
       - recepcion
       - revision
@@ -718,6 +2412,16 @@ components:
         * `control` - Control
         * `supervision` - Supervisión
         * `administracion` - Administración
+    RolDisponible:
+      type: object
+      properties:
+        valor:
+          type: string
+        nombre:
+          type: string
+      required:
+      - nombre
+      - valor
     Salud:
       type: object
       properties:
@@ -758,6 +2462,15 @@ components:
       - id
       - ip
       - ultimo_uso
+    SoporteEnum:
+      enum:
+      - munon
+      - implante
+      type: string
+      description: |-
+        * `` - No aplica
+        * `munon` - Muñón
+        * `implante` - Implante
     TipoEnum:
       enum:
       - equipo
@@ -766,6 +2479,126 @@ components:
       description: |-
         * `equipo` - Equipo del laboratorio
         * `odontologo` - Odontólogo
+    Trabajo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        orden:
+          type: integer
+          readOnly: true
+        item:
+          type: string
+          format: uuid
+          readOnly: true
+        item_nombre:
+          type: string
+          readOnly: true
+        codigo_item:
+          type: string
+          readOnly: true
+        familia:
+          type: string
+          readOnly: true
+        color_familia:
+          type: string
+          readOnly: true
+        piezas:
+          readOnly: true
+        material:
+          type: string
+          readOnly: true
+        color:
+          type: string
+          readOnly: true
+        soporte:
+          readOnly: true
+          oneOf:
+          - $ref: '#/components/schemas/SoporteEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        implante_marca:
+          type: string
+          readOnly: true
+        implante_diametro:
+          type: string
+          readOnly: true
+        implante_conexion:
+          type: string
+          readOnly: true
+        observaciones:
+          type: string
+          readOnly: true
+        etapa_actual:
+          allOf:
+          - $ref: '#/components/schemas/EtapaActual'
+          nullable: true
+          readOnly: true
+        terminado:
+          type: boolean
+          readOnly: true
+        etapas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Etapa'
+          readOnly: true
+      required:
+      - codigo_item
+      - color
+      - color_familia
+      - etapa_actual
+      - etapas
+      - familia
+      - id
+      - implante_conexion
+      - implante_diametro
+      - implante_marca
+      - item
+      - item_nombre
+      - material
+      - observaciones
+      - orden
+      - piezas
+      - soporte
+      - terminado
+    TrabajoNuevoRequest:
+      type: object
+      properties:
+        item:
+          type: string
+          format: uuid
+        piezas: {}
+        material:
+          type: string
+          default: ''
+          maxLength: 60
+        color:
+          type: string
+          default: ''
+          maxLength: 10
+        soporte:
+          default: ''
+          oneOf:
+          - $ref: '#/components/schemas/SoporteEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        implante_marca:
+          type: string
+          default: ''
+          maxLength: 60
+        implante_diametro:
+          type: string
+          default: ''
+          maxLength: 20
+        implante_conexion:
+          type: string
+          default: ''
+          maxLength: 40
+        observaciones:
+          type: string
+          default: ''
+      required:
+      - item
     Usuario:
       type: object
       properties:

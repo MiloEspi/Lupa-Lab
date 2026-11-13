@@ -8,7 +8,9 @@ import os
 
 from django.core.management.base import BaseCommand, CommandError
 
+from catalogo.semilla import cargar_catalogo
 from cuentas.models import Laboratorio, Membresia, Rol, Usuario
+from directorio.models import Cliente, Profesional
 
 PERSONAS = [
     ('admin', 'Ada', 'Administración', [Rol.ADMINISTRACION, Rol.SUPERVISION]),
@@ -17,6 +19,12 @@ PERSONAS = [
     ('cad', 'Carla', 'CAD', [Rol.CAD]),
     ('produccion', 'Pedro', 'Producción', [Rol.PRODUCCION]),
     ('control', 'Coco', 'Control', [Rol.CONTROL]),
+]
+
+CLIENTES = [
+    ('Consultorio Ejemplo Norte', [('Julia', 'Pérez', 'MP 1001')]),
+    ('Clínica Ejemplo Sur', [('Martín', 'Gómez', 'MP 1002'), ('Lucía', 'Fernández', 'MP 1003')]),
+    ('Odontología Ejemplo Centro', [('Tomás', 'Ruiz', 'MP 1004')]),
 ]
 
 
@@ -41,4 +49,16 @@ class Command(BaseCommand):
                 laboratorio=laboratorio,
                 defaults={'roles': [r.value for r in roles], 'activa': True},
             )
-        self.stdout.write(self.style.SUCCESS(f'Listo: {len(PERSONAS)} personas en {laboratorio}.'))
+        cargar_catalogo(laboratorio)
+        # Clientes y profesionales inventados (nunca datos reales).
+        for razon, profesionales in CLIENTES:
+            cliente, _ = Cliente.objects.get_or_create(laboratorio=laboratorio, razon_social=razon)
+            for nombre, apellido, matricula in profesionales:
+                profesional, _ = Profesional.objects.get_or_create(
+                    laboratorio=laboratorio,
+                    nombre=nombre,
+                    apellido=apellido,
+                    defaults={'matricula': matricula},
+                )
+                profesional.clientes.add(cliente)
+        self.stdout.write(self.style.SUCCESS(f'Listo: {len(PERSONAS)} personas, catálogo y clientes en {laboratorio}.'))

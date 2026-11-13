@@ -11,7 +11,7 @@ import { Card } from '../ui/card'
 import { Field } from '../ui/field'
 import { Aviso, Titulo } from '../ui/marco'
 
-type Rol = Esquemas['RolesEnum']
+type Rol = Esquemas['Rol']
 
 /** Chips de roles: un toque prende o apaga cada uno (sin desplegables, P12). */
 function SelectorRoles({ valor, onChange, deshabilitado }: { valor: Rol[]; onChange: (r: Rol[]) => void; deshabilitado?: boolean }) {

@@ -201,6 +201,419 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/casos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["casos_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["casos_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/cancelar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_cancelar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/entregar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_entregar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/trabajos/{trabajo}/avanzar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_trabajos_avanzar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Todo el catálogo de una vez: son decenas de filas, no vale paginar. */
+        get: operations["catalogo_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogo/checklists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["catalogo_checklists_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["catalogo_checklists_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogo/checklists/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["catalogo_checklists_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        patch: operations["catalogo_checklists_partial_update"];
+        trace?: never;
+    };
+    "/api/catalogo/familias": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["catalogo_familias_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["catalogo_familias_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogo/familias/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["catalogo_familias_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        patch: operations["catalogo_familias_partial_update"];
+        trace?: never;
+    };
+    "/api/catalogo/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["catalogo_items_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["catalogo_items_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogo/items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["catalogo_items_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        patch: operations["catalogo_items_partial_update"];
+        trace?: never;
+    };
+    "/api/catalogo/rutas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["catalogo_rutas_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["catalogo_rutas_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogo/rutas/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["catalogo_rutas_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        patch: operations["catalogo_rutas_partial_update"];
+        trace?: never;
+    };
+    "/api/clientes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["clientes_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["clientes_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clientes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["clientes_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        patch: operations["clientes_partial_update"];
+        trace?: never;
+    };
     "/api/equipo/invitaciones": {
         parameters: {
             query?: never;
@@ -295,6 +708,62 @@ export interface paths {
         patch: operations["equipo_miembros_partial_update"];
         trace?: never;
     };
+    "/api/profesionales": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["profesionales_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["profesionales_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profesionales/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["profesionales_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        patch: operations["profesionales_partial_update"];
+        trace?: never;
+    };
     "/api/salud": {
         parameters: {
             query?: never;
@@ -320,14 +789,128 @@ export interface components {
             apellido?: string;
             password: string;
         };
+        /** @enum {unknown} */
+        BlankEnum: "";
         CambiarPasswordRequest: {
             password: string;
             actual: string;
+        };
+        CancelarRequest: {
+            motivo: string;
+        };
+        Caso: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly numero: number;
+            readonly codigo: string;
+            readonly cliente: components["schemas"]["PersonaResumen"];
+            readonly profesional: components["schemas"]["PersonaResumen"];
+            readonly paciente: string;
+            /** Format: date */
+            readonly fecha_ingreso: string;
+            /** Format: date */
+            readonly fecha_prometida: string | null;
+            readonly estado: components["schemas"]["CasoEstadoEnum"];
+            readonly observaciones: string;
+            readonly motivo_cancelacion: string;
+            /** Format: date-time */
+            readonly creado: string;
+            readonly trabajos: components["schemas"]["Trabajo"][];
+        };
+        /**
+         * @description * `abierto` - Abierto
+         *     * `entregado` - Entregado
+         *     * `cancelado` - Cancelado
+         * @enum {string}
+         */
+        CasoEstadoEnum: "abierto" | "entregado" | "cancelado";
+        CasoNuevoRequest: {
+            /** Format: uuid */
+            cliente: string;
+            /** Format: uuid */
+            profesional: string;
+            /**
+             * @description Solo iniciales: son datos de salud.
+             * @default
+             */
+            paciente: string;
+            /** Format: date */
+            fecha_prometida?: string | null;
+            /** @default  */
+            observaciones: string;
+            trabajos: components["schemas"]["TrabajoNuevoRequest"][];
+        };
+        Catalogo: {
+            familias: components["schemas"]["Familia"][];
+            items: components["schemas"]["Item"][];
+            plantillas_etapas: components["schemas"]["PlantillaEtapas"][];
+            plantillas_checklist: components["schemas"]["PlantillaChecklist"][];
+        };
+        Cliente: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Razón social o nombre */
+            razon_social: string;
+            cuit?: string;
+            telefono?: string;
+            whatsapp?: string;
+            email?: string;
+            /** Dirección */
+            direccion?: string;
+            notas?: string;
+            activo?: boolean;
+        };
+        ClienteRequest: {
+            /** Razón social o nombre */
+            razon_social: string;
+            cuit?: string;
+            telefono?: string;
+            whatsapp?: string;
+            email?: string;
+            /** Dirección */
+            direccion?: string;
+            notas?: string;
+            activo?: boolean;
+        };
+        ClienteResumen: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Razón social o nombre */
+            razon_social: string;
+        };
+        ClienteResumenRequest: {
+            /** Razón social o nombre */
+            razon_social: string;
         };
         ElegirLaboratorioRequest: {
             /** Format: uuid */
             laboratorio: string;
         };
+        Etapa: {
+            readonly orden: number;
+            readonly nombre: string;
+            readonly rol: components["schemas"]["Rol"];
+            readonly en_consultorio: boolean;
+            readonly estado: components["schemas"]["EtapaEstadoEnum"];
+            /** Format: date-time */
+            readonly inicio: string | null;
+            /** Format: date-time */
+            readonly fin: string | null;
+            readonly hecha_por: string;
+        };
+        EtapaActual: {
+            orden: number;
+            nombre: string;
+            rol: string;
+            total: number;
+        };
+        /**
+         * @description * `pendiente` - Pendiente
+         *     * `en_curso` - En curso
+         *     * `hecha` - Hecha
+         * @enum {string}
+         */
+        EtapaEstadoEnum: "pendiente" | "en_curso" | "hecha";
         Evento: {
             /** Format: uuid */
             readonly id: string;
@@ -339,6 +922,22 @@ export interface components {
             objeto_id?: string;
             antes?: unknown;
             despues?: unknown;
+        };
+        Familia: {
+            /** Format: uuid */
+            readonly id: string;
+            nombre: string;
+            letra: string;
+            color?: string;
+            orden?: number;
+            activa?: boolean;
+        };
+        FamiliaRequest: {
+            nombre: string;
+            letra: string;
+            color?: string;
+            orden?: number;
+            activa?: boolean;
         };
         IngresarRequest: {
             /** Format: email */
@@ -352,7 +951,7 @@ export interface components {
             email: string;
             nombre?: string;
             apellido?: string;
-            roles: components["schemas"]["RolesEnum"][];
+            roles: components["schemas"]["Rol"][];
             /** Format: date-time */
             readonly vence: string;
             /** Format: date-time */
@@ -374,7 +973,37 @@ export interface components {
             email: string;
             nombre?: string;
             apellido?: string;
-            roles: components["schemas"]["RolesEnum"][];
+            roles: components["schemas"]["Rol"][];
+        };
+        Item: {
+            /** Format: uuid */
+            readonly id: string;
+            /** Format: uuid */
+            familia: string;
+            nombre: string;
+            /** Código */
+            codigo: string;
+            materiales?: string[];
+            datos_pedidos?: string[];
+            /** Format: uuid */
+            plantilla_etapas: string;
+            /** Format: uuid */
+            plantilla_checklist?: string | null;
+            activo?: boolean;
+        };
+        ItemRequest: {
+            /** Format: uuid */
+            familia: string;
+            nombre: string;
+            /** Código */
+            codigo: string;
+            materiales?: string[];
+            datos_pedidos?: string[];
+            /** Format: uuid */
+            plantilla_etapas: string;
+            /** Format: uuid */
+            plantilla_checklist?: string | null;
+            activo?: boolean;
         };
         Laboratorio: {
             /** Format: uuid */
@@ -386,21 +1015,137 @@ export interface components {
             readonly id: string;
             laboratorio: components["schemas"]["Laboratorio"];
             readonly tipo: components["schemas"]["TipoEnum"];
-            readonly roles: components["schemas"]["RolesEnum"][];
+            readonly roles: components["schemas"]["Rol"][];
         };
         Miembro: {
             /** Format: uuid */
             readonly id: string;
             readonly usuario: components["schemas"]["Usuario"];
             readonly tipo: components["schemas"]["TipoEnum"];
-            roles?: components["schemas"]["RolesEnum"][];
+            roles?: components["schemas"]["Rol"][];
             activa?: boolean;
             /** Format: date-time */
             readonly creado: string;
         };
-        PatchedMiembroCambioRequest: {
-            roles?: components["schemas"]["RolesEnum"][];
+        Paso: {
+            nombre: string;
+            rol: components["schemas"]["Rol"];
+            en_consultorio?: boolean;
+        };
+        PasoRequest: {
+            nombre: string;
+            rol: components["schemas"]["Rol"];
+            en_consultorio?: boolean;
+        };
+        PatchedClienteRequest: {
+            /** Razón social o nombre */
+            razon_social?: string;
+            cuit?: string;
+            telefono?: string;
+            whatsapp?: string;
+            email?: string;
+            /** Dirección */
+            direccion?: string;
+            notas?: string;
+            activo?: boolean;
+        };
+        PatchedFamiliaRequest: {
+            nombre?: string;
+            letra?: string;
+            color?: string;
+            orden?: number;
             activa?: boolean;
+        };
+        PatchedItemRequest: {
+            /** Format: uuid */
+            familia?: string;
+            nombre?: string;
+            /** Código */
+            codigo?: string;
+            materiales?: string[];
+            datos_pedidos?: string[];
+            /** Format: uuid */
+            plantilla_etapas?: string;
+            /** Format: uuid */
+            plantilla_checklist?: string | null;
+            activo?: boolean;
+        };
+        PatchedMiembroCambioRequest: {
+            roles?: components["schemas"]["Rol"][];
+            activa?: boolean;
+        };
+        PatchedPlantillaChecklistRequest: {
+            nombre?: string;
+            items?: string[];
+        };
+        PatchedPlantillaEtapasRequest: {
+            nombre?: string;
+            pasos?: components["schemas"]["PasoRequest"][];
+        };
+        PatchedProfesionalRequest: {
+            nombre?: string;
+            apellido?: string;
+            /** Matrícula */
+            matricula?: string;
+            telefono?: string;
+            whatsapp?: string;
+            email?: string;
+            clientes?: string[];
+            notas?: string;
+            activo?: boolean;
+        };
+        PersonaResumen: {
+            /** Format: uuid */
+            id: string;
+            nombre: string;
+        };
+        PlantillaChecklist: {
+            /** Format: uuid */
+            readonly id: string;
+            nombre: string;
+            items: string[];
+        };
+        PlantillaChecklistRequest: {
+            nombre: string;
+            items: string[];
+        };
+        PlantillaEtapas: {
+            /** Format: uuid */
+            readonly id: string;
+            nombre: string;
+            pasos: components["schemas"]["Paso"][];
+        };
+        PlantillaEtapasRequest: {
+            nombre: string;
+            pasos: components["schemas"]["PasoRequest"][];
+        };
+        Profesional: {
+            /** Format: uuid */
+            readonly id: string;
+            nombre: string;
+            apellido: string;
+            readonly nombre_completo: string;
+            /** Matrícula */
+            matricula?: string;
+            telefono?: string;
+            whatsapp?: string;
+            email?: string;
+            clientes?: string[];
+            readonly clientes_detalle: components["schemas"]["ClienteResumen"][];
+            notas?: string;
+            activo?: boolean;
+        };
+        ProfesionalRequest: {
+            nombre: string;
+            apellido: string;
+            /** Matrícula */
+            matricula?: string;
+            telefono?: string;
+            whatsapp?: string;
+            email?: string;
+            clientes?: string[];
+            notas?: string;
+            activo?: boolean;
         };
         RecuperarRequest: {
             /** Format: email */
@@ -410,10 +1155,6 @@ export interface components {
             password: string;
             uid: string;
             token: string;
-        };
-        RolDisponible: {
-            valor: string;
-            nombre: string;
         };
         /**
          * @description * `recepcion` - Recepción
@@ -425,7 +1166,11 @@ export interface components {
          *     * `administracion` - Administración
          * @enum {string}
          */
-        RolesEnum: "recepcion" | "revision" | "cad" | "produccion" | "control" | "supervision" | "administracion";
+        Rol: "recepcion" | "revision" | "cad" | "produccion" | "control" | "supervision" | "administracion";
+        RolDisponible: {
+            valor: string;
+            nombre: string;
+        };
         Salud: {
             estado: string;
         };
@@ -442,11 +1187,59 @@ export interface components {
             readonly esta: boolean;
         };
         /**
+         * @description * `` - No aplica
+         *     * `munon` - Muñón
+         *     * `implante` - Implante
+         * @enum {string}
+         */
+        SoporteEnum: "munon" | "implante";
+        /**
          * @description * `equipo` - Equipo del laboratorio
          *     * `odontologo` - Odontólogo
          * @enum {string}
          */
         TipoEnum: "equipo" | "odontologo";
+        Trabajo: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly orden: number;
+            /** Format: uuid */
+            readonly item: string;
+            readonly item_nombre: string;
+            readonly codigo_item: string;
+            readonly familia: string;
+            readonly color_familia: string;
+            readonly piezas: unknown;
+            readonly material: string;
+            readonly color: string;
+            readonly soporte: components["schemas"]["SoporteEnum"] | components["schemas"]["BlankEnum"];
+            readonly implante_marca: string;
+            readonly implante_diametro: string;
+            readonly implante_conexion: string;
+            readonly observaciones: string;
+            readonly etapa_actual: components["schemas"]["EtapaActual"] | null;
+            readonly terminado: boolean;
+            readonly etapas: components["schemas"]["Etapa"][];
+        };
+        TrabajoNuevoRequest: {
+            /** Format: uuid */
+            item: string;
+            piezas?: unknown;
+            /** @default  */
+            material: string;
+            /** @default  */
+            color: string;
+            /** @default  */
+            soporte: components["schemas"]["SoporteEnum"] | components["schemas"]["BlankEnum"];
+            /** @default  */
+            implante_marca: string;
+            /** @default  */
+            implante_diametro: string;
+            /** @default  */
+            implante_conexion: string;
+            /** @default  */
+            observaciones: string;
+        };
         Usuario: {
             /** Format: uuid */
             readonly id: string;
@@ -761,6 +1554,632 @@ export interface operations {
             };
         };
     };
+    casos_list: {
+        parameters: {
+            query?: {
+                cliente?: string;
+                estado?: "abierto" | "cancelado" | "entregado";
+                limit?: number;
+                offset?: number;
+                /** @description Número, paciente, cliente o profesional */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Caso"][];
+                };
+            };
+        };
+    };
+    casos_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CasoNuevoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CasoNuevoRequest"];
+                "multipart/form-data": components["schemas"]["CasoNuevoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Caso"];
+                };
+            };
+        };
+    };
+    casos_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Caso"];
+                };
+            };
+        };
+    };
+    casos_cancelar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelarRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CancelarRequest"];
+                "multipart/form-data": components["schemas"]["CancelarRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Caso"];
+                };
+            };
+        };
+    };
+    casos_entregar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Caso"];
+                };
+            };
+        };
+    };
+    casos_trabajos_avanzar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                trabajo: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Caso"];
+                };
+            };
+        };
+    };
+    catalogo_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Catalogo"];
+                };
+            };
+        };
+    };
+    catalogo_checklists_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaChecklist"][];
+                };
+            };
+        };
+    };
+    catalogo_checklists_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlantillaChecklistRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PlantillaChecklistRequest"];
+                "multipart/form-data": components["schemas"]["PlantillaChecklistRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaChecklist"];
+                };
+            };
+        };
+    };
+    catalogo_checklists_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaChecklist"];
+                };
+            };
+        };
+    };
+    catalogo_checklists_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPlantillaChecklistRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPlantillaChecklistRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPlantillaChecklistRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaChecklist"];
+                };
+            };
+        };
+    };
+    catalogo_familias_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Familia"][];
+                };
+            };
+        };
+    };
+    catalogo_familias_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FamiliaRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["FamiliaRequest"];
+                "multipart/form-data": components["schemas"]["FamiliaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Familia"];
+                };
+            };
+        };
+    };
+    catalogo_familias_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Familia"];
+                };
+            };
+        };
+    };
+    catalogo_familias_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedFamiliaRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedFamiliaRequest"];
+                "multipart/form-data": components["schemas"]["PatchedFamiliaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Familia"];
+                };
+            };
+        };
+    };
+    catalogo_items_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"][];
+                };
+            };
+        };
+    };
+    catalogo_items_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ItemRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ItemRequest"];
+                "multipart/form-data": components["schemas"]["ItemRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+        };
+    };
+    catalogo_items_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+        };
+    };
+    catalogo_items_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedItemRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedItemRequest"];
+                "multipart/form-data": components["schemas"]["PatchedItemRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Item"];
+                };
+            };
+        };
+    };
+    catalogo_rutas_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaEtapas"][];
+                };
+            };
+        };
+    };
+    catalogo_rutas_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlantillaEtapasRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PlantillaEtapasRequest"];
+                "multipart/form-data": components["schemas"]["PlantillaEtapasRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaEtapas"];
+                };
+            };
+        };
+    };
+    catalogo_rutas_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaEtapas"];
+                };
+            };
+        };
+    };
+    catalogo_rutas_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedPlantillaEtapasRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedPlantillaEtapasRequest"];
+                "multipart/form-data": components["schemas"]["PatchedPlantillaEtapasRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantillaEtapas"];
+                };
+            };
+        };
+    };
+    clientes_list: {
+        parameters: {
+            query?: {
+                /** @description Por defecto solo los activos */
+                activos?: boolean;
+                /** @description Busca sin importar tildes ni mayúsculas */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cliente"][];
+                };
+            };
+        };
+    };
+    clientes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClienteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ClienteRequest"];
+                "multipart/form-data": components["schemas"]["ClienteRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cliente"];
+                };
+            };
+        };
+    };
+    clientes_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cliente"];
+                };
+            };
+        };
+    };
+    clientes_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedClienteRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedClienteRequest"];
+                "multipart/form-data": components["schemas"]["PatchedClienteRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Cliente"];
+                };
+            };
+        };
+    };
     equipo_invitaciones_list: {
         parameters: {
             query?: never;
@@ -867,6 +2286,104 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Miembro"];
+                };
+            };
+        };
+    };
+    profesionales_list: {
+        parameters: {
+            query?: {
+                /** @description Por defecto solo los activos */
+                activos?: boolean;
+                cliente?: string;
+                /** @description Busca sin importar tildes ni mayúsculas */
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profesional"][];
+                };
+            };
+        };
+    };
+    profesionales_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfesionalRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ProfesionalRequest"];
+                "multipart/form-data": components["schemas"]["ProfesionalRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profesional"];
+                };
+            };
+        };
+    };
+    profesionales_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profesional"];
+                };
+            };
+        };
+    };
+    profesionales_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedProfesionalRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedProfesionalRequest"];
+                "multipart/form-data": components["schemas"]["PatchedProfesionalRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Profesional"];
                 };
             };
         };

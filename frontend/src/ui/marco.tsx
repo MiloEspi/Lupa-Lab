@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { Activity, Building2, Home, LogOut, UserRound, Users } from 'lucide-react'
+import { Activity, BookOpen, Building2, Contact, Home, LogOut, UserRound, Users } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router'
 import { api } from '../api/cliente'
@@ -37,6 +37,8 @@ export function Marca({ className }: { className?: string }) {
 
 const ENLACES = [
   { a: '/', texto: 'Inicio', icono: Home },
+  { a: '/clientes', texto: 'Clientes', icono: Contact },
+  { a: '/catalogo', texto: 'Catálogo', icono: BookOpen },
   { a: '/equipo', texto: 'Equipo', icono: Users, permiso: 'gestionar_equipo' },
   { a: '/actividad', texto: 'Actividad', icono: Activity, permiso: 'ver_auditoria' },
   { a: '/perfil', texto: 'Mi perfil', icono: UserRound },

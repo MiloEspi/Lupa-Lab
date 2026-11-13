@@ -41,6 +41,9 @@ INSTALLED_APPS = [
     'comun',
     'cuentas',
     'auditoria',
+    'directorio',
+    'catalogo',
+    'casos',
 ]
 
 MIDDLEWARE = [
@@ -141,6 +144,7 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '0.1.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
+    'ENUM_NAME_OVERRIDES': {'Rol': 'cuentas.models.Rol'},
 }
 
 LOGGING = {

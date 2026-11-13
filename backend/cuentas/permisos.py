@@ -6,8 +6,8 @@ que no está en `_PERMISOS` no la puede hacer nadie: una vista nueva que pregunt
 mal escrito nace cerrada, no abierta. Todos los del equipo leen todo el caso; los roles
 solo deciden lo que se puede CAMBIAR.
 
-Las reglas que dependen del objeto (por ejemplo, que solo el responsable actual confirme
-la lectura de un cambio) se suman acá cuando exista el caso (S6, S7), no en las vistas.
+Las reglas que dependen del objeto (quién avanza una etapa; en la S7, quién confirma la
+lectura de un cambio) también viven acá, no en las vistas.
 """
 
 from enum import StrEnum
@@ -27,6 +27,7 @@ class Accion(StrEnum):
     CONTROLAR = 'controlar'
     REASIGNAR = 'reasignar'
     ENTREGAR = 'entregar'
+    CANCELAR_CASO = 'cancelar_caso'
     COMENTAR = 'comentar'
     GESTIONAR_EQUIPO = 'gestionar_equipo'
     GESTIONAR_CATALOGO = 'gestionar_catalogo'
@@ -49,6 +50,7 @@ _PERMISOS: dict[Accion, frozenset[str]] = {
     Accion.CONTROLAR: frozenset({_CTRL, _SUP}),
     Accion.REASIGNAR: frozenset({_SUP}),
     Accion.ENTREGAR: frozenset({_REC, _SUP}),
+    Accion.CANCELAR_CASO: frozenset({_REC, _SUP}),
     Accion.COMENTAR: _TODO_EL_EQUIPO,
     Accion.GESTIONAR_EQUIPO: frozenset({_ADM}),
     Accion.GESTIONAR_CATALOGO: frozenset({_ADM}),
@@ -66,6 +68,14 @@ def puede(membresia, accion: str) -> bool:
     except ValueError:
         return False
     return any(rol in permitidos for rol in membresia.roles)
+
+
+def puede_avanzar_etapa(membresia, etapa) -> bool:
+    """Una etapa la avanza quien tiene el rol de esa etapa. Supervisión cubre a cualquiera
+    que falte. Las pruebas en el consultorio las cierra Recepción cuando vuelve el trabajo."""
+    if membresia is None or not membresia.activa or not membresia.laboratorio.activo:
+        return False
+    return etapa.rol in membresia.roles or _SUP in membresia.roles
 
 
 def permisos_de(membresia) -> list[str]:
