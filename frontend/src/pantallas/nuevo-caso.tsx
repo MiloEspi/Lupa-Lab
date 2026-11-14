@@ -409,7 +409,7 @@ export function NuevoCaso() {
       // El escaneo del odontólogo es la versión 1 del caso: solo lectura, nunca se reemplaza (P6).
       if (escaneosSubidos.length) {
         setPaso('Guardando el escaneo inicial…')
-        await pedir(api.POST('/api/casos/{id}/versiones', { params: { path: { id: caso.id } }, body: { origen: 'inicial', archivos: escaneosSubidos, descripcion: 'Escaneo del odontólogo' } }))
+        await pedir(api.POST('/api/casos/{id}/versiones', { params: { path: { id: caso.id } }, body: { origen: 'inicial', archivos: escaneosSubidos, descripcion: 'Escaneo del odontólogo', incluye_base: true } }))
       }
       const final = await pedir(api.GET('/api/casos/{id}', { params: { path: { id: caso.id } } }))
       return { caso: final, segundos: segundosCarga, fallidos }

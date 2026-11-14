@@ -1,0 +1,93 @@
+/* =============================================================================================
+   Cabecera del caso (opción C, elegida el 13/11). Ver components/CabeceraCaso.tsx.
+   ============================================================================================= */
+
+/* Tarjeta de vidrio: translúcida, con desenfoque y brillo de borde. */
+.vidrio-caso {
+  position: relative; isolation: isolate; border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--sf) 80%, white);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--sf) 72%, transparent), color-mix(in srgb, var(--sf) 50%, transparent));
+  -webkit-backdrop-filter: blur(22px) saturate(1.5); backdrop-filter: blur(22px) saturate(1.5);
+  box-shadow: 0 1px 0 rgb(255 255 255 / .7) inset, 0 0 0 1px color-mix(in srgb, var(--ln) 40%, transparent), 0 22px 44px -26px rgb(24 32 44 / .35);
+}
+
+/*
+ * Fondo que cuenta el caso. Tres luces difusas:
+ *  - arriba a la izquierda, el color del TIPO (violeta = corona): sale de donde está el código;
+ *  - abajo, el color del ESTADO, centrada en la etapa actual de la franja (--ex/--ey, las mide el componente);
+ *    ámbar si está frenado, cálido si avanza normal; se mueve cuando el caso cambia de etapa;
+ *  - arriba a la derecha, verde que crece a medida que el caso se acerca al final (--verde). Es suave y
+ *    claro, así lo que va ahí (Pide, Paga, Paciente) sigue leyéndose bien.
+ */
+.fondo-caso { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.fondo-caso i { position: absolute; border-radius: 9999px; filter: blur(46px); transition: left .7s cubic-bezier(.2, .7, .2, 1), top .7s, background .5s, opacity .5s; }
+.fondo-caso .fc-tipo { width: 520px; height: 300px; left: -150px; top: -150px; background: color-mix(in srgb, var(--ac) 36%, transparent); animation: deriva-caso 18s ease-in-out infinite alternate; }
+.fondo-caso .fc-avance { width: 460px; height: 260px; right: -140px; top: -140px; background: color-mix(in srgb, var(--ok) var(--verde, 10%), transparent); animation: deriva-caso 22s ease-in-out infinite alternate-reverse; }
+.fondo-caso .fc-estado {
+  width: 420px; height: 200px; left: var(--ex, 50%); top: var(--ey, 100%); translate: -50% -50%;
+  background: color-mix(in srgb, var(--estado) 46%, transparent);
+  animation: late-estado 3.6s ease-in-out infinite alternate;
+}
+@keyframes deriva-caso { to { transform: translate3d(40px, 16px, 0) scale(1.1); } }
+@keyframes late-estado { from { opacity: .65; scale: .92; } to { opacity: 1; scale: 1.06; } }
+.fondo-caso ~ * { position: relative; z-index: 1; }
+
+/* Franja + fecha + fila de abajo. Ancho: [franja | fecha] / [nota | vista].
+   Angosto (notebook): la franja sola arriba y [fecha | nota | vista] abajo, para que entren los nombres. */
+.cc-cont { container-type: inline-size; }
+.cc-grid {
+  display: grid; gap: 8px 12px; align-items: center;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "franja franja franja" "fecha nota vista";
+}
+.cc-franja { grid-area: franja; align-self: stretch; }
+.cc-fecha { grid-area: fecha; }
+.cc-nota { grid-area: nota; }
+.cc-vista { grid-area: vista; }
+.cc-nota:empty, .cc-vista:empty { display: none; }
+@container (min-width: 1180px) {
+  .cc-grid { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "franja fecha" "nota vista"; }
+  .cc-fecha { align-self: stretch; }
+}
+
+/* Código: holográfico (el tono pasa por el color del tipo y dos vecinos, con un brillo que lo recorre)
+   y un poco de volumen: tres sombras de 1 px en el color del tipo más una sombra suave abajo. */
+.cod { font-family: var(--font-display); font-weight: 800; line-height: 1; letter-spacing: -.035em; white-space: nowrap; display: inline-block; }
+@property --brillo { syntax: "<percentage>"; inherits: false; initial-value: 130%; }
+@property --holo { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+.cod-holo {
+  background-image:
+    linear-gradient(100deg, transparent 40%, rgb(255 255 255 / .55) 48%, transparent 56%),
+    linear-gradient(110deg, var(--acT), color-mix(in srgb, var(--acT) 55%, #0B5E78), color-mix(in srgb, var(--acT) 55%, #8E2A62), var(--acT), color-mix(in srgb, var(--acT) 55%, #0B5E78));
+  background-size: 260% 100%, 320% 100%; background-repeat: no-repeat; background-position: var(--brillo) 0, var(--holo) 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--ac) 30%, transparent)) drop-shadow(0 2px 2px rgb(24 32 44 / .2));
+  animation: holo 9s linear infinite, brillo-sat 6.5s ease-in-out infinite;
+}
+/* Con volumen (los drop-shadow se apilan: cada uno corre 1 px el resultado anterior). */
+.cod-holo.cod-volumen {
+  filter:
+    drop-shadow(1px 1px 0 color-mix(in srgb, var(--ac) 45%, white))
+    drop-shadow(1px 1px 0 color-mix(in srgb, var(--ac) 65%, white))
+    drop-shadow(1px 1px 0 color-mix(in srgb, var(--ac) 85%, white))
+    drop-shadow(0 10px 14px color-mix(in srgb, var(--ac) 30%, transparent));
+}
+@keyframes holo { to { --holo: 100%; } }
+@keyframes brillo-sat { 0%, 50% { --brillo: 130%; } 100% { --brillo: -30%; } }
+
+/* La etapa actual en la franja: "estamos acá". Late suave con el color del estado. */
+.etapa-actual {
+  --t: var(--estado);
+  /* Arriba apenas más claro (5 % de blanco): el texto blanco sigue >= 4,5:1 en los cinco tipos y en ámbar. */
+  background: linear-gradient(180deg, color-mix(in srgb, var(--t) 95%, white), var(--t) 55%, color-mix(in srgb, var(--t) 88%, black));
+  box-shadow: 0 1px 0 rgb(255 255 255 / .35) inset, 0 -1px 0 rgb(0 0 0 / .16) inset, 0 12px 24px -10px var(--t);
+  animation: aura-etapa 2.4s ease-in-out infinite;
+}
+@keyframes aura-etapa {
+  0%, 100% { box-shadow: 0 1px 0 rgb(255 255 255 / .35) inset, 0 -1px 0 rgb(0 0 0 / .16) inset, 0 12px 24px -10px var(--t), 0 0 0 0 color-mix(in srgb, var(--t) 40%, transparent); }
+  50% { box-shadow: 0 1px 0 rgb(255 255 255 / .35) inset, 0 -1px 0 rgb(0 0 0 / .16) inset, 0 12px 24px -10px var(--t), 0 0 0 6px color-mix(in srgb, var(--t) 14%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fondo-caso i, .cod-holo, .etapa-actual { animation: none !important; }
+}

@@ -1,15 +1,18 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router'
 import { puede, useYo } from './lib/sesion'
 import { AceptarInvitacion, ElegirLaboratorio, Ingresar, Recuperar, Restablecer } from './pantallas/cuentas'
-import { CasoDetalle } from './pantallas/caso'
 import { Casos } from './pantallas/casos'
 import { CatalogoPantalla } from './pantallas/catalogo'
 import { Directorio } from './pantallas/directorio'
 import { Equipo } from './pantallas/equipo'
 import { Actividad, Perfil } from './pantallas/inicio'
 import { NuevoCaso } from './pantallas/nuevo-caso'
-import { ConSesion } from './ui/con-sesion'
+import { Cargando, ConSesion } from './ui/con-sesion'
 import { Marco } from './ui/marco'
+
+// El caso trae el visor 3D (three.js): se carga aparte, solo cuando se abre un caso.
+const CasoDetalle = lazy(() => import('./pantallas/caso').then((m) => ({ default: m.CasoDetalle })))
 
 /** Una ruta que pide un permiso: sin él, vuelve al inicio (el backend igual lo rechaza). */
 function ConPermiso({ accion }: { accion: string }) {
@@ -43,7 +46,7 @@ export function App() {
       >
         <Route index element={<Navigate to="/casos" replace />} />
         <Route path="casos" element={<Casos />} />
-        <Route path="casos/:id" element={<CasoDetalle />} />
+        <Route path="casos/:id" element={<Suspense fallback={<Cargando />}><CasoDetalle /></Suspense>} />
         <Route element={<ConPermiso accion="crear_caso" />}>
           <Route path="nuevo" element={<NuevoCaso />} />
         </Route>

@@ -170,3 +170,31 @@ def test_zip_con_las_mallas_y_las_notas_en_csv(cliente, caso):
         csv = z.read('notas.csv').decode('utf-8-sig').splitlines()
     assert csv[0].startswith('numero,x_mm,y_mm,z_mm,texto')
     assert csv[1].startswith('1,1.500,-2.000,10.250,"Margen poco claro, revisar"')
+
+
+def test_contenido_y_normal_de_las_notas(cliente, caso):
+    a, *_ = subir(cliente, caso)
+    version = _version(cliente, caso, [a]).json()
+    r = cliente.get(f'/api/casos/{caso["id"]}/archivos/{a["id"]}/contenido')
+    assert b''.join(r.streaming_content) == MALLA
+    url = f'/api/casos/{caso["id"]}/versiones/{version["id"]}/notas'
+    nota = cliente.post(url, {'x': 1, 'y': 2, 'z': 3, 'normal': [0, 0.5, 0.866], 'texto': 'x'}, format='json').json()
+    assert nota['normal'] == [0.0, 0.5, 0.866]
+    assert cliente.post(url, {'x': 1, 'y': 2, 'z': 3, 'normal': [1], 'texto': 'x'}, format='json').status_code == 400
+
+
+def test_las_notas_se_numeran_por_caso(cliente, entrar, caso, laboratorio, crear_persona):
+    a, *_ = subir(cliente, caso)
+    v1 = _version(cliente, caso, [a]).json()
+    cliente.post(
+        f'/api/casos/{caso["id"]}/versiones/{v1["id"]}/notas', {'x': 0, 'y': 0, 'z': 0, 'texto': 'uno'}, format='json'
+    )
+    cliente.post('/api/auth/salir')
+    entrar(crear_persona(laboratorio, 'carla@lab-a.test', [Rol.CAD]))
+    d, *_ = subir(cliente, caso, nombre='corona.stl', tipo='diseno')
+    v2 = _version(cliente, caso, [d], origen='cad').json()
+    assert v2['incluye_base'] is True
+    r = cliente.post(
+        f'/api/casos/{caso["id"]}/versiones/{v2["id"]}/notas', {'x': 0, 'y': 0, 'z': 0, 'texto': 'dos'}, format='json'
+    )
+    assert r.json()['numero'] == 2

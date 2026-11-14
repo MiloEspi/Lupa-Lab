@@ -9,6 +9,7 @@ from catalogo import views as ct
 from cuentas import views as c
 from cuentas import views_equipo as e
 from directorio import views as d
+from hilo.views import MensajesView
 
 api = [
     path('salud', c.SaludView.as_view()),
@@ -53,6 +54,8 @@ api = [
     path('casos/<uuid:pk>/archivos', ar.ArchivosView.as_view()),
     path('casos/<uuid:pk>/archivos/<uuid:archivo>/confirmar', ar.ConfirmarArchivoView.as_view()),
     path('casos/<uuid:pk>/archivos/<uuid:archivo>/descarga', ar.DescargaView.as_view()),
+    path('casos/<uuid:pk>/archivos/<uuid:archivo>/contenido', ar.ContenidoView.as_view()),
+    path('casos/<uuid:pk>/mensajes', MensajesView.as_view()),
     path('casos/<uuid:pk>/versiones', ar.VersionesView.as_view()),
     path('casos/<uuid:pk>/versiones/<uuid:version>/notas', ar.NotasView.as_view()),
     path('casos/<uuid:pk>/versiones/<uuid:version>/notas/<uuid:nota>', ar.NotaView.as_view()),

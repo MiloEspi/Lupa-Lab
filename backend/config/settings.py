@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'catalogo',
     'casos',
     'archivos',
+    'hilo',
 ]
 
 MIDDLEWARE = [

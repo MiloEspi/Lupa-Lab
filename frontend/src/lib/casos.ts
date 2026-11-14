@@ -131,3 +131,14 @@ export const vistaCasos = {
 }
 
 export const filtrar = (casos: Caso[], v: Pick<VistaCasos, 'filtro' | 'q'>) => casos.filter((c) => PASA[v.filtro](c) && coincide(c, v.q))
+
+/** Variables CSS que repintan todo con el color de la familia (acento, su texto y su tinte). */
+export const coloresDeFamilia = (hex?: string) =>
+  hex
+    ? ({ '--ac': hex, '--acT': `color-mix(in srgb, ${hex} 84%, black)`, '--acS': `color-mix(in srgb, ${hex} 11%, white)`, '--acI': '#FFFFFF' } as Record<string, string>)
+    : undefined
+
+/** Tono aproximado de cada color de la guía VITA, para la muestra al lado del nombre. */
+export const TONOS_VITA: Record<string, string> = { A1: '#F4EBD6', A2: '#EEE0C2', A3: '#E6D2AC', 'A3.5': '#E0C89E', A4: '#D6B988', B1: '#F3ECD9', B2: '#EBDDBE', B3: '#E2CFA6', B4: '#D9C192', C1: '#E5DCC8', C2: '#DCCFB4', C3: '#D2C3A3', C4: '#C6B48F', D2: '#E8DFCF', D3: '#DDD1BC', D4: '#D3C5AC' }
+
+export const NOMBRE_ROL: Record<string, string> = { recepcion: 'Recepción', revision: 'Revisión técnica', cad: 'CAD', produccion: 'Producción', control: 'Control', supervision: 'Supervisión', administracion: 'Administración' }

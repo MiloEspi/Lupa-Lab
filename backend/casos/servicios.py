@@ -192,6 +192,15 @@ def registrar_cambio(request, caso, trabajo, cambios, motivo):
     caso.cambio_pendiente = revision
     caso.save(update_fields=['version_ficha', 'cambio_pendiente', 'actualizado'])
     registrar(request, 'cambio_registrado', caso, despues={'version': revision.version, 'cambios': diferencias})
+    from hilo.servicios import mensaje_de_sistema
+
+    detalle = ', '.join(f'{d["campo"]} {d["antes"] or "—"} a {d["despues"] or "—"}' for d in diferencias)
+    mensaje_de_sistema(
+        caso,
+        f'Cambio registrado: {detalle}. Motivo: {revision.motivo}',
+        version_ficha=revision.version,
+        nota=f'Lo registró {request.user.nombre_visible}',
+    )
     return caso
 
 

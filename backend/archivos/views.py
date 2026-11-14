@@ -12,7 +12,7 @@ import zipfile
 
 from django.db import transaction
 from django.db.models import Max
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.utils.text import get_valid_filename
 from drf_spectacular.utils import extend_schema
@@ -127,8 +127,15 @@ class NotaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = NotaEscaneo
-        fields = ['id', 'numero', 'x', 'y', 'z', 'texto', 'visibilidad', 'etapa', 'autor', 'es_mia', 'creado']
+        fields = ['id', 'numero', 'x', 'y', 'z', 'normal', 'texto', 'visibilidad', 'etapa', 'autor', 'es_mia', 'creado']
         read_only_fields = ['id', 'numero', 'etapa', 'autor', 'es_mia', 'creado']
+
+    def validate_normal(self, valor):
+        if valor in (None, []):
+            return []
+        if not isinstance(valor, list) or len(valor) != 3 or not all(isinstance(x, (int, float)) for x in valor):
+            raise serializers.ValidationError('La normal son tres números.')
+        return [round(float(x), 4) for x in valor]
 
     def get_es_mia(self, nota) -> bool:
         membresia = self.context.get('membresia')
@@ -142,7 +149,7 @@ class VersionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VersionEscaneo
-        fields = ['id', 'numero', 'origen', 'descripcion', 'creada_por', 'creado', 'archivos', 'notas']
+        fields = ['id', 'numero', 'origen', 'descripcion', 'incluye_base', 'creada_por', 'creado', 'archivos', 'notas']
         read_only_fields = fields
 
 
@@ -150,6 +157,7 @@ class VersionNuevaSerializer(serializers.Serializer):
     origen = serializers.ChoiceField(choices=VersionEscaneo.Origen.choices)
     descripcion = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
     archivos = serializers.ListField(child=serializers.UUIDField(), allow_empty=False)
+    incluye_base = serializers.BooleanField(required=False, default=True)
 
 
 # --- Archivos ------------------------------------------------------------------------------
@@ -214,6 +222,22 @@ class ConfirmarArchivoView(_DelCaso):
         archivo.save(update_fields=['estado', 'actualizado'])
         registrar(request, 'archivo_subido', caso, despues={'archivo': archivo.nombre, 'tipo': archivo.tipo})
         return Response(ArchivoSerializer(archivo).data)
+
+
+class ContenidoView(_DelCaso):
+    """El archivo en sí, con una URL que no cambia (el visor la usa de clave de caché). En
+    desarrollo lo sirve Django; con R2 redirige a una URL firmada que vence."""
+
+    @extend_schema(responses={(200, 'application/octet-stream'): bytes})
+    def get(self, request, pk, archivo):
+        caso = self.caso(request, pk)
+        archivo = get_object_or_404(caso.archivos, pk=archivo, estado=Archivo.Estado.LISTO)
+        tienda = almacen()
+        if isinstance(tienda, AlmacenLocal):
+            respuesta = FileResponse(tienda.abrir(archivo.clave), filename=archivo.nombre)
+            respuesta['Cache-Control'] = 'private, max-age=3600'
+            return respuesta
+        return HttpResponseRedirect(tienda.url_descarga(archivo.clave, archivo.nombre))
 
 
 class DescargaView(_DelCaso):
@@ -306,6 +330,7 @@ class VersionesView(_DelCaso):
                 numero=numero,
                 origen=origen,
                 descripcion=datos.validated_data['descripcion'],
+                incluye_base=datos.validated_data['incluye_base'],
                 creada_por=request.user,
             )
             Archivo.objects.filter(pk__in=[a.pk for a in archivos]).update(version=version)
@@ -323,8 +348,8 @@ class NotasView(_DelCaso):
         datos = NotaSerializer(data=request.data)
         datos.is_valid(raise_exception=True)
         with transaction.atomic():
-            VersionEscaneo.objects.select_for_update().get(pk=version.pk)
-            numero = (version.notas.aggregate(m=Max('numero'))['m'] or 0) + 1
+            Caso.objects.select_for_update().get(pk=caso.pk)
+            numero = (NotaEscaneo.objects.filter(version__caso=caso).aggregate(m=Max('numero'))['m'] or 0) + 1
             nota = datos.save(version=version, numero=numero, autor=request.membresia, etapa=_etapa_actual(caso))
         registrar(request, 'nota_escaneo', caso, despues={'version': version.numero, 'nota': numero})
         return Response(NotaSerializer(nota, context={'membresia': request.membresia}).data, status=201)

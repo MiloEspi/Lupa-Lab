@@ -22,6 +22,9 @@ class VersionEscaneo(ModeloBase):
     numero = models.PositiveIntegerField()
     origen = models.CharField(max_length=10, choices=Origen.choices)
     descripcion = models.CharField(max_length=200, blank=True)
+    #: Versión de CAD con "solo la prótesis": se dibuja encima del escaneo inicial, en el
+    #: mismo lugar que en exocad. Si es la escena completa, se ve sola.
+    incluye_base = models.BooleanField(default=True)
     creada_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
 
     class Meta:
@@ -91,6 +94,8 @@ class NotaEscaneo(ModeloBase):
     x = models.DecimalField(max_digits=9, decimal_places=3)
     y = models.DecimalField(max_digits=9, decimal_places=3)
     z = models.DecimalField(max_digits=9, decimal_places=3)
+    #: Hacia dónde mira la superficie en ese punto: el visor orienta el marcador con esto.
+    normal = models.JSONField(default=list, blank=True)
     texto = models.TextField()
     autor = models.ForeignKey('cuentas.Membresia', on_delete=models.PROTECT, related_name='+')
     visibilidad = models.CharField(max_length=12, choices=Visibilidad.choices, default=Visibilidad.EQUIPO)

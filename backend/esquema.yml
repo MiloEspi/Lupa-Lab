@@ -477,6 +477,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/Archivo'
           description: ''
+  /api/casos/{id}/archivos/{archivo}/contenido:
+    get:
+      operationId: casos_archivos_contenido_retrieve
+      description: |-
+        El archivo en sí, con una URL que no cambia (el visor la usa de clave de caché). En
+        desarrollo lo sirve Django; con R2 redirige a una URL firmada que vence.
+      parameters:
+      - in: path
+        name: archivo
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: ''
   /api/casos/{id}/archivos/{archivo}/descarga:
     get:
       operationId: casos_archivos_descarga_retrieve
@@ -671,6 +702,70 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Ficha'
+          description: ''
+  /api/casos/{id}/mensajes:
+    get:
+      operationId: casos_mensajes_list
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Mensaje'
+          description: ''
+    post:
+      operationId: casos_mensajes_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MensajeNuevoRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MensajeNuevoRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MensajeNuevoRequest'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mensaje'
           description: ''
   /api/casos/{id}/trabajos/{trabajo}/avanzar:
     post:
@@ -1799,6 +1894,28 @@ components:
           minLength: 1
       required:
       - password
+    Adjunto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        nombre:
+          type: string
+          readOnly: true
+        tipo:
+          allOf:
+          - $ref: '#/components/schemas/TipoArchivo'
+          readOnly: true
+        categoria:
+          type: string
+          readOnly: true
+      required:
+      - categoria
+      - id
+      - nombre
+      - tipo
     Archivo:
       type: object
       properties:
@@ -2732,6 +2849,102 @@ components:
       - laboratorio
       - roles
       - tipo
+    Mensaje:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        tipo:
+          allOf:
+          - $ref: '#/components/schemas/TipoC8fEnum'
+          readOnly: true
+        texto:
+          type: string
+          readOnly: true
+        nota:
+          type: string
+          readOnly: true
+        version_ficha:
+          type: integer
+          readOnly: true
+          nullable: true
+        etapa:
+          type: string
+          readOnly: true
+        etapa_orden:
+          type: integer
+          readOnly: true
+          nullable: true
+        autor:
+          type: string
+          readOnly: true
+        rol:
+          type: string
+          readOnly: true
+        adjuntos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Adjunto'
+          readOnly: true
+        creado:
+          type: string
+          format: date-time
+          readOnly: true
+        respuestas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Respuesta'
+          readOnly: true
+      required:
+      - adjuntos
+      - autor
+      - creado
+      - etapa
+      - etapa_orden
+      - id
+      - nota
+      - respuestas
+      - rol
+      - texto
+      - tipo
+      - version_ficha
+    MensajeNuevoRequest:
+      type: object
+      properties:
+        texto:
+          type: string
+          default: ''
+        tipo:
+          allOf:
+          - $ref: '#/components/schemas/MensajeNuevoTipoEnum'
+          default: equipo
+        nota:
+          type: string
+          default: ''
+          maxLength: 120
+        respuesta_a:
+          type: string
+          format: uuid
+          nullable: true
+        etapa_orden:
+          type: integer
+          minimum: 0
+          nullable: true
+        adjuntos:
+          type: array
+          items:
+            type: string
+            format: uuid
+    MensajeNuevoTipoEnum:
+      enum:
+      - equipo
+      - odontologo
+      type: string
+      description: |-
+        * `equipo` - equipo
+        * `odontologo` - odontologo
     Miembro:
       type: object
       properties:
@@ -2784,6 +2997,7 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,3})?$
+        normal: {}
         texto:
           type: string
         visibilidad:
@@ -2827,6 +3041,7 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,3})?$
+        normal: {}
         texto:
           type: string
           minLength: 1
@@ -3000,6 +3215,7 @@ components:
           type: string
           format: decimal
           pattern: ^-?\d{0,6}(?:\.\d{0,3})?$
+        normal: {}
         texto:
           type: string
           minLength: 1
@@ -3276,6 +3492,61 @@ components:
           minLength: 1
       required:
       - email
+    Respuesta:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        tipo:
+          allOf:
+          - $ref: '#/components/schemas/TipoC8fEnum'
+          readOnly: true
+        texto:
+          type: string
+          readOnly: true
+        nota:
+          type: string
+          readOnly: true
+        version_ficha:
+          type: integer
+          readOnly: true
+          nullable: true
+        etapa:
+          type: string
+          readOnly: true
+        etapa_orden:
+          type: integer
+          readOnly: true
+          nullable: true
+        autor:
+          type: string
+          readOnly: true
+        rol:
+          type: string
+          readOnly: true
+        adjuntos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Adjunto'
+          readOnly: true
+        creado:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - adjuntos
+      - autor
+      - creado
+      - etapa
+      - etapa_orden
+      - id
+      - nota
+      - rol
+      - texto
+      - tipo
+      - version_ficha
     RestablecerRequest:
       type: object
       properties:
@@ -3399,6 +3670,16 @@ components:
         * `orden` - Orden firmada
         * `diseno` - Diseño
         * `otro` - Otro
+    TipoC8fEnum:
+      enum:
+      - equipo
+      - odontologo
+      - sistema
+      type: string
+      description: |-
+        * `equipo` - Solo el equipo
+        * `odontologo` - También el odontólogo
+        * `sistema` - Sistema
     TipoMembresia:
       enum:
       - equipo
@@ -3571,6 +3852,9 @@ components:
         descripcion:
           type: string
           readOnly: true
+        incluye_base:
+          type: boolean
+          readOnly: true
         creada_por:
           type: string
           readOnly: true
@@ -3594,6 +3878,7 @@ components:
       - creado
       - descripcion
       - id
+      - incluye_base
       - notas
       - numero
       - origen
@@ -3611,6 +3896,9 @@ components:
           items:
             type: string
             format: uuid
+        incluye_base:
+          type: boolean
+          default: true
       required:
       - archivos
       - origen

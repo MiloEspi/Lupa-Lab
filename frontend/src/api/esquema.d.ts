@@ -301,6 +301,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/casos/{id}/archivos/{archivo}/contenido": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description El archivo en sí, con una URL que no cambia (el visor la usa de clave de caché). En
+         *     desarrollo lo sirve Django; con R2 redirige a una URL firmada que vence.
+         */
+        get: operations["casos_archivos_contenido_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/casos/{id}/archivos/{archivo}/descarga": {
         parameters: {
             query?: never;
@@ -422,6 +442,34 @@ export interface paths {
         get: operations["casos_fichas_list"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/mensajes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["casos_mensajes_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_mensajes_create"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1028,6 +1076,13 @@ export interface components {
             apellido?: string;
             password: string;
         };
+        Adjunto: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly nombre: string;
+            readonly tipo: components["schemas"]["TipoArchivo"];
+            readonly categoria: string;
+        };
         Archivo: {
             /** Format: uuid */
             readonly id: string;
@@ -1369,6 +1424,40 @@ export interface components {
             readonly tipo: components["schemas"]["TipoMembresia"];
             readonly roles: components["schemas"]["Rol"][];
         };
+        Mensaje: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly tipo: components["schemas"]["TipoC8fEnum"];
+            readonly texto: string;
+            readonly nota: string;
+            readonly version_ficha: number | null;
+            readonly etapa: string;
+            readonly etapa_orden: number | null;
+            readonly autor: string;
+            readonly rol: string;
+            readonly adjuntos: components["schemas"]["Adjunto"][];
+            /** Format: date-time */
+            readonly creado: string;
+            readonly respuestas: components["schemas"]["Respuesta"][];
+        };
+        MensajeNuevoRequest: {
+            /** @default  */
+            texto: string;
+            /** @default equipo */
+            tipo: components["schemas"]["MensajeNuevoTipoEnum"];
+            /** @default  */
+            nota: string;
+            /** Format: uuid */
+            respuesta_a?: string | null;
+            etapa_orden?: number | null;
+            adjuntos?: string[];
+        };
+        /**
+         * @description * `equipo` - equipo
+         *     * `odontologo` - odontologo
+         * @enum {string}
+         */
+        MensajeNuevoTipoEnum: "equipo" | "odontologo";
         Miembro: {
             /** Format: uuid */
             readonly id: string;
@@ -1389,6 +1478,7 @@ export interface components {
             y: string;
             /** Format: decimal */
             z: string;
+            normal?: unknown;
             texto: string;
             visibilidad?: components["schemas"]["VisibilidadEnum"];
             readonly etapa: string;
@@ -1404,6 +1494,7 @@ export interface components {
             y: string;
             /** Format: decimal */
             z: string;
+            normal?: unknown;
             texto: string;
             visibilidad?: components["schemas"]["VisibilidadEnum"];
         };
@@ -1476,6 +1567,7 @@ export interface components {
             y?: string;
             /** Format: decimal */
             z?: string;
+            normal?: unknown;
             texto?: string;
             visibilidad?: components["schemas"]["VisibilidadEnum"];
         };
@@ -1566,6 +1658,21 @@ export interface components {
             /** Format: email */
             email: string;
         };
+        Respuesta: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly tipo: components["schemas"]["TipoC8fEnum"];
+            readonly texto: string;
+            readonly nota: string;
+            readonly version_ficha: number | null;
+            readonly etapa: string;
+            readonly etapa_orden: number | null;
+            readonly autor: string;
+            readonly rol: string;
+            readonly adjuntos: components["schemas"]["Adjunto"][];
+            /** Format: date-time */
+            readonly creado: string;
+        };
         RestablecerRequest: {
             password: string;
             uid: string;
@@ -1624,6 +1731,13 @@ export interface components {
          * @enum {string}
          */
         TipoArchivo: "escaneo" | "foto" | "orden" | "diseno" | "otro";
+        /**
+         * @description * `equipo` - Solo el equipo
+         *     * `odontologo` - También el odontólogo
+         *     * `sistema` - Sistema
+         * @enum {string}
+         */
+        TipoC8fEnum: "equipo" | "odontologo" | "sistema";
         /**
          * @description * `equipo` - Equipo del laboratorio
          *     * `odontologo` - Odontólogo
@@ -1689,6 +1803,7 @@ export interface components {
             readonly numero: number;
             readonly origen: components["schemas"]["OrigenEnum"];
             readonly descripcion: string;
+            readonly incluye_base: boolean;
             readonly creada_por: string;
             /** Format: date-time */
             readonly creado: string;
@@ -1700,6 +1815,8 @@ export interface components {
             /** @default  */
             descripcion: string;
             archivos: string[];
+            /** @default true */
+            incluye_base: boolean;
         };
         /**
          * @description * `equipo` - Solo el equipo
@@ -2152,6 +2269,28 @@ export interface operations {
             };
         };
     };
+    casos_archivos_contenido_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                archivo: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+        };
+    };
     casos_archivos_descarga_retrieve: {
         parameters: {
             query?: never;
@@ -2293,6 +2432,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Ficha"][];
+                };
+            };
+        };
+    };
+    casos_mensajes_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mensaje"][];
+                };
+            };
+        };
+    };
+    casos_mensajes_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["MensajeNuevoRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["MensajeNuevoRequest"];
+                "multipart/form-data": components["schemas"]["MensajeNuevoRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mensaje"];
                 };
             };
         };
