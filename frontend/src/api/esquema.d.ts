@@ -251,6 +251,122 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/casos/{id}/archivos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["casos_archivos_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_archivos_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/archivos/{archivo}/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_archivos_confirmar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/archivos/{archivo}/descarga": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["casos_archivos_descarga_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/cambios": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_cambios_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/cambios/confirmar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_cambios_confirmar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/casos/{id}/cancelar": {
         parameters: {
             query?: never;
@@ -295,6 +411,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/casos/{id}/fichas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description El historial de versiones de la ficha, la más nueva primero. */
+        get: operations["casos_fichas_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/casos/{id}/trabajos/{trabajo}/avanzar": {
         parameters: {
             query?: never;
@@ -311,6 +444,95 @@ export interface paths {
          *     no existe: no se distingue "existe pero no es tuyo".
          */
         post: operations["casos_trabajos_avanzar_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/versiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["casos_versiones_list"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_versiones_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/versiones/{version}/notas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_versiones_notas_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/versiones/{version}/notas/{nota}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        patch: operations["casos_versiones_notas_partial_update"];
+        trace?: never;
+    };
+    "/api/casos/{id}/versiones/{version}/zip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description La versión lista para abrir en exocad: las mallas sueltas y las notas en CSV (P8). */
+        get: operations["casos_versiones_zip_retrieve"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -789,11 +1011,56 @@ export interface components {
             apellido?: string;
             password: string;
         };
+        Archivo: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly tipo: components["schemas"]["TipoArchivo"];
+            readonly nombre: string;
+            readonly formato: string;
+            /** Tamaño en bytes */
+            readonly tamano: number;
+            readonly sha256: string;
+            readonly estado: components["schemas"]["ArchivoEstadoEnum"];
+            readonly etapa: string;
+            /** Format: uuid */
+            readonly version: string | null;
+            readonly subido_por: string;
+            /** Format: date-time */
+            readonly creado: string;
+        };
+        ArchivoConSubida: {
+            archivo: components["schemas"]["Archivo"];
+            subida: components["schemas"]["Subida"];
+        };
+        /**
+         * @description * `pendiente` - Subiendo
+         *     * `listo` - Listo
+         * @enum {string}
+         */
+        ArchivoEstadoEnum: "pendiente" | "listo";
         /** @enum {unknown} */
         BlankEnum: "";
         CambiarPasswordRequest: {
             password: string;
             actual: string;
+        };
+        CambioPendiente: {
+            version: number;
+            motivo: string;
+            cambios: components["schemas"]["Diferencia"][];
+            confirma: string[];
+            registrado_por: string;
+            /** Format: date-time */
+            creado: string;
+        };
+        CambioRequest: {
+            /** Format: uuid */
+            trabajo: string;
+            motivo: string;
+            /** @description Campos que cambian: piezas, material, color, soporte, implante_marca, implante_diametro, implante_conexion, observaciones */
+            cambios: {
+                [key: string]: unknown;
+            };
         };
         CancelarRequest: {
             motivo: string;
@@ -815,6 +1082,8 @@ export interface components {
             readonly motivo_cancelacion: string;
             /** Format: date-time */
             readonly creado: string;
+            readonly version_ficha: number;
+            readonly cambio_pendiente: components["schemas"]["CambioPendiente"] | null;
             readonly trabajos: components["schemas"]["Trabajo"][];
         };
         /**
@@ -882,6 +1151,26 @@ export interface components {
             /** Razón social o nombre */
             razon_social: string;
         };
+        ConfirmarRequest: {
+            /** @default false */
+            rehacer: boolean;
+            /** Format: uuid */
+            trabajo?: string | null;
+            /** @description Orden de la etapa */
+            volver_a?: number | null;
+            /** @default  */
+            comentario: string;
+        };
+        Descarga: {
+            url: string;
+        };
+        Diferencia: {
+            /** Format: uuid */
+            trabajo: string;
+            campo: string;
+            antes: unknown;
+            despues: unknown;
+        };
         ElegirLaboratorioRequest: {
             /** Format: uuid */
             laboratorio: string;
@@ -938,6 +1227,16 @@ export interface components {
             color?: string;
             orden?: number;
             activa?: boolean;
+        };
+        Ficha: {
+            readonly version: number;
+            readonly trabajos: unknown;
+            readonly cambios: unknown;
+            readonly motivo: string;
+            readonly creada_por: string;
+            /** Format: date-time */
+            readonly creado: string;
+            readonly confirmada_por: string[];
         };
         IngresarRequest: {
             /** Format: email */
@@ -1014,19 +1313,53 @@ export interface components {
             /** Format: uuid */
             readonly id: string;
             laboratorio: components["schemas"]["Laboratorio"];
-            readonly tipo: components["schemas"]["TipoEnum"];
+            readonly tipo: components["schemas"]["TipoMembresia"];
             readonly roles: components["schemas"]["Rol"][];
         };
         Miembro: {
             /** Format: uuid */
             readonly id: string;
             readonly usuario: components["schemas"]["Usuario"];
-            readonly tipo: components["schemas"]["TipoEnum"];
+            readonly tipo: components["schemas"]["TipoMembresia"];
             roles?: components["schemas"]["Rol"][];
             activa?: boolean;
             /** Format: date-time */
             readonly creado: string;
         };
+        Nota: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly numero: number;
+            /** Format: decimal */
+            x: string;
+            /** Format: decimal */
+            y: string;
+            /** Format: decimal */
+            z: string;
+            texto: string;
+            visibilidad?: components["schemas"]["VisibilidadEnum"];
+            readonly etapa: string;
+            readonly autor: string;
+            readonly es_mia: boolean;
+            /** Format: date-time */
+            readonly creado: string;
+        };
+        NotaRequest: {
+            /** Format: decimal */
+            x: string;
+            /** Format: decimal */
+            y: string;
+            /** Format: decimal */
+            z: string;
+            texto: string;
+            visibilidad?: components["schemas"]["VisibilidadEnum"];
+        };
+        /**
+         * @description * `inicial` - Escaneo del odontólogo
+         *     * `cad` - Diseño (exocad)
+         * @enum {string}
+         */
+        OrigenEnum: "inicial" | "cad";
         Paso: {
             nombre: string;
             rol: components["schemas"]["Rol"];
@@ -1074,6 +1407,16 @@ export interface components {
             roles?: components["schemas"]["Rol"][];
             activa?: boolean;
         };
+        PatchedNotaRequest: {
+            /** Format: decimal */
+            x?: string;
+            /** Format: decimal */
+            y?: string;
+            /** Format: decimal */
+            z?: string;
+            texto?: string;
+            visibilidad?: components["schemas"]["VisibilidadEnum"];
+        };
         PatchedPlantillaChecklistRequest: {
             nombre?: string;
             items?: string[];
@@ -1093,6 +1436,12 @@ export interface components {
             clientes?: string[];
             notas?: string;
             activo?: boolean;
+        };
+        PedidoSubidaRequest: {
+            tipo: components["schemas"]["TipoArchivo"];
+            nombre: string;
+            tamano: number;
+            sha256: string;
         };
         PersonaResumen: {
             /** Format: uuid */
@@ -1193,12 +1542,28 @@ export interface components {
          * @enum {string}
          */
         SoporteEnum: "munon" | "implante";
+        Subida: {
+            url: string;
+            metodo: string;
+            encabezados: {
+                [key: string]: string;
+            };
+        };
+        /**
+         * @description * `escaneo` - Escaneo 3D
+         *     * `foto` - Foto
+         *     * `orden` - Orden firmada
+         *     * `diseno` - Diseño
+         *     * `otro` - Otro
+         * @enum {string}
+         */
+        TipoArchivo: "escaneo" | "foto" | "orden" | "diseno" | "otro";
         /**
          * @description * `equipo` - Equipo del laboratorio
          *     * `odontologo` - Odontólogo
          * @enum {string}
          */
-        TipoEnum: "equipo" | "odontologo";
+        TipoMembresia: "equipo" | "odontologo";
         Trabajo: {
             /** Format: uuid */
             readonly id: string;
@@ -1252,6 +1617,30 @@ export interface components {
             readonly apellido: string;
             readonly nombre_visible: string;
         };
+        Version: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly numero: number;
+            readonly origen: components["schemas"]["OrigenEnum"];
+            readonly descripcion: string;
+            readonly creada_por: string;
+            /** Format: date-time */
+            readonly creado: string;
+            readonly archivos: components["schemas"]["Archivo"][];
+            readonly notas: components["schemas"]["Nota"][];
+        };
+        VersionNuevaRequest: {
+            origen: components["schemas"]["OrigenEnum"];
+            /** @default  */
+            descripcion: string;
+            archivos: string[];
+        };
+        /**
+         * @description * `equipo` - Solo el equipo
+         *     * `odontologo` - También el odontólogo
+         * @enum {string}
+         */
+        VisibilidadEnum: "equipo" | "odontologo";
         Yo: {
             usuario: components["schemas"]["Usuario"];
             membresias: components["schemas"]["MembresiaPropia"][];
@@ -1626,6 +2015,152 @@ export interface operations {
             };
         };
     };
+    casos_archivos_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Archivo"][];
+                };
+            };
+        };
+    };
+    casos_archivos_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PedidoSubidaRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PedidoSubidaRequest"];
+                "multipart/form-data": components["schemas"]["PedidoSubidaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArchivoConSubida"];
+                };
+            };
+        };
+    };
+    casos_archivos_confirmar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                archivo: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Archivo"];
+                };
+            };
+        };
+    };
+    casos_archivos_descarga_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                archivo: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Descarga"];
+                };
+            };
+        };
+    };
+    casos_cambios_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CambioRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["CambioRequest"];
+                "multipart/form-data": components["schemas"]["CambioRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Caso"];
+                };
+            };
+        };
+    };
+    casos_cambios_confirmar_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConfirmarRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["ConfirmarRequest"];
+                "multipart/form-data": components["schemas"]["ConfirmarRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Caso"];
+                };
+            };
+        };
+    };
     casos_cancelar_create: {
         parameters: {
             query?: never;
@@ -1674,6 +2209,27 @@ export interface operations {
             };
         };
     };
+    casos_fichas_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Ficha"][];
+                };
+            };
+        };
+    };
     casos_trabajos_avanzar_create: {
         parameters: {
             query?: never;
@@ -1692,6 +2248,133 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Caso"];
+                };
+            };
+        };
+    };
+    casos_versiones_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Version"][];
+                };
+            };
+        };
+    };
+    casos_versiones_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VersionNuevaRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["VersionNuevaRequest"];
+                "multipart/form-data": components["schemas"]["VersionNuevaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Version"];
+                };
+            };
+        };
+    };
+    casos_versiones_notas_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotaRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["NotaRequest"];
+                "multipart/form-data": components["schemas"]["NotaRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Nota"];
+                };
+            };
+        };
+    };
+    casos_versiones_notas_partial_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                nota: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["PatchedNotaRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PatchedNotaRequest"];
+                "multipart/form-data": components["schemas"]["PatchedNotaRequest"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Nota"];
+                };
+            };
+        };
+    };
+    casos_versiones_zip_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                version: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/zip": string;
                 };
             };
         };

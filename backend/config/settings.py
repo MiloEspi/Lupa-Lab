@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'directorio',
     'catalogo',
     'casos',
+    'archivos',
 ]
 
 MIDDLEWARE = [
@@ -119,6 +120,17 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
+# --- Archivos ---
+# 'local' en desarrollo y tests (carpeta del proyecto); 'r2' en producción (Cloudflare R2).
+ARCHIVOS_BACKEND = env('ARCHIVOS_BACKEND', default='local')
+ARCHIVOS_DIR = env('ARCHIVOS_DIR', default=str(BASE_DIR / 'archivos-locales'))
+R2_ENDPOINT = env('R2_ENDPOINT', default='')
+R2_BALDE = env('R2_BALDE', default='')
+R2_CLAVE = env('R2_CLAVE', default='')
+R2_SECRETO = env('R2_SECRETO', default='')
+# Un escaneo grande sube directo a R2; en local pasa por Django y necesita este margen.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 310 * 1024 * 1024
+
 # --- Mail ---
 EMAIL_BACKEND = env('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Lupa Lab <no-responder@lupalab.local>')
@@ -144,7 +156,11 @@ SPECTACULAR_SETTINGS = {
     'VERSION': '0.1.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
-    'ENUM_NAME_OVERRIDES': {'Rol': 'cuentas.models.Rol'},
+    'ENUM_NAME_OVERRIDES': {
+        'Rol': 'cuentas.models.Rol',
+        'TipoMembresia': 'cuentas.models.Membresia.Tipo',
+        'TipoArchivo': 'archivos.models.Archivo.Tipo',
+    },
 }
 
 LOGGING = {

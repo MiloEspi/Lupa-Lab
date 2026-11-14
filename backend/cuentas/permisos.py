@@ -78,6 +78,15 @@ def puede_avanzar_etapa(membresia, etapa) -> bool:
     return etapa.rol in membresia.roles or _SUP in membresia.roles
 
 
+def puede_confirmar_cambio(membresia, roles_que_confirman) -> bool:
+    """Un cambio de ficha lo confirma quien tiene el trabajo ahora (el rol de su etapa
+    actual), porque es quien tiene que enterarse. Supervisión no lo confirma por otro: si
+    nadie lo lee, le llega el aviso (S15), no el botón."""
+    if membresia is None or not membresia.activa or not membresia.laboratorio.activo:
+        return False
+    return any(rol in membresia.roles for rol in roles_que_confirman)
+
+
 def permisos_de(membresia) -> list[str]:
     """Para que el front esconda lo que no aplica. La decisión real la toma `puede`."""
     return sorted(accion.value for accion in Accion if puede(membresia, accion))

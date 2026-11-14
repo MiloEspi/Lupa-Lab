@@ -12,7 +12,7 @@ from cuentas.permisos import LaboratorioScopedMixin
 from directorio.models import Cliente, Profesional
 
 from . import servicios
-from .models import Caso, EtapaTrabajo, Trabajo
+from .models import CAMPOS_DE_FICHA, Caso, EtapaTrabajo, RevisionFicha, Trabajo
 from .validadores import normalizar_color, validar_piezas
 
 # --- Lectura -----------------------------------------------------------------------------
@@ -80,11 +80,56 @@ class TrabajoSerializer(serializers.ModelSerializer):
         return {'orden': etapa.orden, 'nombre': etapa.nombre, 'rol': etapa.rol, 'total': len(trabajo.etapas.all())}
 
 
+class DiferenciaSerializer(serializers.Serializer):
+    trabajo = serializers.UUIDField()
+    campo = serializers.CharField()
+    antes = serializers.JSONField()
+    despues = serializers.JSONField()
+
+
+class CambioPendienteSerializer(serializers.Serializer):
+    version = serializers.IntegerField()
+    motivo = serializers.CharField()
+    cambios = DiferenciaSerializer(many=True)
+    #: Roles que pueden confirmarlo (los de la etapa actual de lo que cambió).
+    confirma = serializers.ListField(child=serializers.CharField())
+    registrado_por = serializers.CharField()
+    creado = serializers.DateTimeField()
+
+
+class FichaSerializer(serializers.ModelSerializer):
+    creada_por = serializers.CharField(source='creada_por.nombre_visible', read_only=True)
+    confirmada_por = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RevisionFicha
+        fields = ['version', 'trabajos', 'cambios', 'motivo', 'creada_por', 'creado', 'confirmada_por']
+        read_only_fields = fields
+
+    def get_confirmada_por(self, revision) -> list[str]:
+        return [c.membresia.usuario.nombre_visible for c in revision.confirmaciones.all()]
+
+
 class CasoSerializer(serializers.ModelSerializer):
     codigo = serializers.CharField(read_only=True)
     cliente = serializers.SerializerMethodField()
     profesional = serializers.SerializerMethodField()
     trabajos = TrabajoSerializer(many=True, read_only=True)
+    cambio_pendiente = serializers.SerializerMethodField()
+
+    @extend_schema_field(CambioPendienteSerializer(allow_null=True))
+    def get_cambio_pendiente(self, caso):
+        revision = caso.cambio_pendiente
+        if revision is None:
+            return None
+        return {
+            'version': revision.version,
+            'motivo': revision.motivo,
+            'cambios': revision.cambios,
+            'confirma': servicios.roles_que_confirman(revision),
+            'registrado_por': revision.creada_por.nombre_visible,
+            'creado': revision.creado,
+        }
 
     class Meta:
         model = Caso
@@ -101,6 +146,8 @@ class CasoSerializer(serializers.ModelSerializer):
             'observaciones',
             'motivo_cancelacion',
             'creado',
+            'version_ficha',
+            'cambio_pendiente',
             'trabajos',
         ]
         read_only_fields = fields
@@ -186,7 +233,7 @@ class CancelarSerializer(serializers.Serializer):
 
 
 def _con_todo(queryset):
-    return queryset.select_related('cliente', 'profesional').prefetch_related(
+    return queryset.select_related('cliente', 'profesional', 'cambio_pendiente__creada_por').prefetch_related(
         Prefetch(
             'trabajos',
             queryset=Trabajo.objects.select_related('item__familia').prefetch_related(
@@ -280,3 +327,66 @@ class CancelarView(LaboratorioScopedMixin, APIView):
         datos.is_valid(raise_exception=True)
         servicios.cancelar(request, self.get_scoped_object(request, Caso, pk=pk), datos.validated_data['motivo'])
         return Response(CasoSerializer(get_caso(self, request, pk)).data)
+
+
+# --- Cambios de ficha (S7) -----------------------------------------------------------------
+
+
+class CambioSerializer(serializers.Serializer):
+    trabajo = serializers.UUIDField()
+    motivo = serializers.CharField(max_length=300, allow_blank=True)
+    cambios = serializers.DictField(help_text=f'Campos que cambian: {", ".join(CAMPOS_DE_FICHA)}')
+
+
+class ConfirmarSerializer(serializers.Serializer):
+    rehacer = serializers.BooleanField(default=False)
+    trabajo = serializers.UUIDField(required=False, allow_null=True, default=None)
+    volver_a = serializers.IntegerField(required=False, allow_null=True, default=None, help_text='Orden de la etapa')
+    comentario = serializers.CharField(max_length=300, required=False, allow_blank=True, default='')
+
+
+def _validar_cambios(trabajo, cambios, laboratorio):
+    """El cambio pasa por las mismas reglas fijas que el alta: se arma el trabajo como
+    quedaría y se valida entero (así "material" se controla contra el catálogo)."""
+    desconocidos = sorted(set(cambios) - set(CAMPOS_DE_FICHA))
+    if desconocidos:
+        raise serializers.ValidationError({'cambios': [f'No se puede cambiar: {", ".join(desconocidos)}.']})
+    actual = {c: getattr(trabajo, c) for c in CAMPOS_DE_FICHA}
+    datos = TrabajoNuevoSerializer(
+        data={**actual, **cambios, 'item': trabajo.item_id}, context={'laboratorio': laboratorio}
+    )
+    if not datos.is_valid():
+        raise serializers.ValidationError(datos.errors)
+    return {c: datos.validated_data[c] for c in cambios}
+
+
+class CambiosView(LaboratorioScopedMixin, APIView):
+    @extend_schema(request=CambioSerializer, responses={201: CasoSerializer})
+    def post(self, request, pk):
+        caso = self.get_scoped_object(request, Caso, pk=pk)
+        datos = CambioSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        trabajo = get_object_or_404(caso.trabajos.select_related('item'), pk=datos.validated_data['trabajo'])
+        cambios = _validar_cambios(trabajo, datos.validated_data['cambios'], self.get_laboratorio(request))
+        servicios.registrar_cambio(request, caso, trabajo, cambios, datos.validated_data['motivo'])
+        return Response(CasoSerializer(get_caso(self, request, pk)).data, status=status.HTTP_201_CREATED)
+
+
+class ConfirmarCambioView(LaboratorioScopedMixin, APIView):
+    @extend_schema(request=ConfirmarSerializer, responses=CasoSerializer)
+    def post(self, request, pk):
+        caso = self.get_scoped_object(request, Caso, pk=pk)
+        datos = ConfirmarSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        servicios.confirmar_cambio(request, caso, **datos.validated_data)
+        return Response(CasoSerializer(get_caso(self, request, pk)).data)
+
+
+class FichasView(LaboratorioScopedMixin, APIView):
+    """El historial de versiones de la ficha, la más nueva primero."""
+
+    @extend_schema(responses=FichaSerializer(many=True))
+    def get(self, request, pk):
+        caso = self.get_scoped_object(request, Caso, pk=pk)
+        fichas = caso.fichas.select_related('creada_por').prefetch_related('confirmaciones__membresia__usuario')
+        return Response(FichaSerializer(fichas, many=True).data)

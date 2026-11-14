@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView
 
+from archivos import views as ar
 from auditoria.views import EventosView
 from casos import views as cs
 from catalogo import views as ct
@@ -45,6 +46,18 @@ api = [
     path('casos/<uuid:pk>/trabajos/<uuid:trabajo>/avanzar', cs.AvanzarView.as_view()),
     path('casos/<uuid:pk>/entregar', cs.EntregarView.as_view()),
     path('casos/<uuid:pk>/cancelar', cs.CancelarView.as_view()),
+    path('casos/<uuid:pk>/cambios', cs.CambiosView.as_view()),
+    path('casos/<uuid:pk>/cambios/confirmar', cs.ConfirmarCambioView.as_view()),
+    path('casos/<uuid:pk>/fichas', cs.FichasView.as_view()),
+    path('casos/<uuid:pk>/archivos', ar.ArchivosView.as_view()),
+    path('casos/<uuid:pk>/archivos/<uuid:archivo>/confirmar', ar.ConfirmarArchivoView.as_view()),
+    path('casos/<uuid:pk>/archivos/<uuid:archivo>/descarga', ar.DescargaView.as_view()),
+    path('casos/<uuid:pk>/versiones', ar.VersionesView.as_view()),
+    path('casos/<uuid:pk>/versiones/<uuid:version>/notas', ar.NotasView.as_view()),
+    path('casos/<uuid:pk>/versiones/<uuid:version>/notas/<uuid:nota>', ar.NotaView.as_view()),
+    path('casos/<uuid:pk>/versiones/<uuid:version>/zip', ar.ZipVersionView.as_view()),
+    path('archivos/local/descarga/<str:token>', ar.DescargaLocalView.as_view()),
+    path('archivos/local/<str:token>', ar.SubidaLocalView.as_view()),
     path('esquema', SpectacularAPIView.as_view(), name='esquema'),
 ]
 

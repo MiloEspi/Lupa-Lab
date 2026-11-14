@@ -48,6 +48,16 @@ class Caso(ModeloDeLaboratorio):
     observaciones = models.TextField(blank=True)
     creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
     motivo_cancelacion = models.CharField(max_length=200, blank=True)
+    version_ficha = models.PositiveIntegerField(default=1)
+    #: La última versión que nadie confirmó todavía. Mientras haya una, el caso no avanza
+    #: ("cambio sin confirmar" no es un estado: es una marca que frena en cualquier etapa).
+    cambio_pendiente = models.ForeignKey(
+        'casos.RevisionFicha',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='+',
+    )
 
     class Meta:
         ordering = ['-numero']
@@ -137,3 +147,59 @@ class EtapaTrabajo(models.Model):
 
     def __str__(self):
         return f'{self.orden}. {self.nombre} ({self.get_estado_display()})'
+
+
+#: Lo que se puede cambiar de un trabajo con un cambio de ficha.
+CAMPOS_DE_FICHA = [
+    'piezas',
+    'material',
+    'color',
+    'soporte',
+    'implante_marca',
+    'implante_diametro',
+    'implante_conexion',
+    'observaciones',
+]
+
+
+def foto_de_trabajos(caso):
+    """Copia de los datos de ficha de cada trabajo, tal como están ahora."""
+    return [
+        {'id': str(t.pk), 'item': t.item.nombre, **{c: getattr(t, c) for c in CAMPOS_DE_FICHA}}
+        for t in caso.trabajos.select_related('item').order_by('orden')
+    ]
+
+
+class RevisionFicha(ModeloBase):
+    """
+    Una versión de la ficha. Nunca se edita: un cambio crea la siguiente. La versión 1 es
+    la del alta; cada cambio guarda la copia completa y, aparte, qué campos cambiaron.
+    """
+
+    caso = models.ForeignKey(Caso, on_delete=models.CASCADE, related_name='fichas')
+    version = models.PositiveIntegerField()
+    trabajos = models.JSONField()
+    #: [{"trabajo": id, "campo": "color", "antes": "A2", "despues": "A3"}]
+    cambios = models.JSONField(default=list, blank=True)
+    motivo = models.CharField(max_length=300, blank=True)
+    creada_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
+
+    class Meta:
+        ordering = ['-version']
+        constraints = [models.UniqueConstraint(fields=['caso', 'version'], name='version_unica_por_caso')]
+
+    def __str__(self):
+        return f'{self.caso_id} v{self.version}'
+
+
+class ConfirmacionLectura(ModeloBase):
+    """Quién leyó el cambio y qué decidió (seguir o rehacer desde una etapa)."""
+
+    revision = models.ForeignKey(RevisionFicha, on_delete=models.CASCADE, related_name='confirmaciones')
+    membresia = models.ForeignKey('cuentas.Membresia', on_delete=models.PROTECT, related_name='+')
+    rehacer = models.BooleanField(default=False)
+    volver_a = models.CharField(max_length=80, blank=True)
+    comentario = models.CharField(max_length=300, blank=True)
+
+    def __str__(self):
+        return f'{self.revision} leída por {self.membresia_id}'
