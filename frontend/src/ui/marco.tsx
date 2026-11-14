@@ -1,8 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { Activity, Building2, ClipboardCheck, Contact, LayoutGrid, LogOut, Plus, Rows3, UserRound, Users, type LucideIcon } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Activity, Building2, CheckCheck, Contact, LayoutGrid, LogOut, Plus, Rows3, UserRound, Users, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router'
-import { api } from '../api/cliente'
+import { api, pedir } from '../api/cliente'
 import { Card } from '../components/ui/card'
 import { ToothIcon } from '../components/ui/tooth'
 import { puede, useYo } from '../lib/sesion'
@@ -58,13 +58,13 @@ export function Marca({ className, nombre }: { className?: string; nombre?: stri
   )
 }
 
-type Enlace = { a: string; texto: string; icono: LucideIcon; permiso?: string; fin?: boolean }
+type Enlace = { a: string; texto: string; icono: LucideIcon; permiso?: string; fin?: boolean; cuenta?: 'revision' }
 
 /** Lo del día a día arriba; lo de administración, separado abajo. */
 const PRINCIPAL: Enlace[] = [
   { a: '/nuevo', texto: 'Nuevo caso', icono: Plus, permiso: 'crear_caso' },
+  { a: '/revision', texto: 'Revisión técnica', icono: CheckCheck, permiso: 'revisar', cuenta: 'revision' },
   { a: '/casos', texto: 'Casos', icono: Rows3 },
-  { a: '/revision', texto: 'Revisión', icono: ClipboardCheck, permiso: 'revisar' },
   { a: '/clientes', texto: 'Clientes', icono: Contact },
   { a: '/catalogo', texto: 'Catálogo', icono: LayoutGrid },
 ]
@@ -74,7 +74,7 @@ const ADMINISTRACION: Enlace[] = [
   { a: '/perfil', texto: 'Mi perfil', icono: UserRound },
 ]
 
-function Item({ a, texto, icono: Icono }: Enlace) {
+function Item({ a, texto, icono: Icono, numero }: Enlace & { numero?: number }) {
   return (
     <NavLink
       to={a}
@@ -87,6 +87,12 @@ function Item({ a, texto, icono: Icono }: Enlace) {
     >
       <Icono aria-hidden className="size-5" strokeWidth={1.8} />
       {texto}
+      {!!numero && (
+        <span className="ml-auto min-w-[22px] rounded-full bg-bg2 px-[7px] py-px text-center text-[12px] text-ink2">
+          {numero}
+          <span className="sr-only"> casos esperan</span>
+        </span>
+      )}
     </NavLink>
   )
 }
@@ -107,6 +113,14 @@ export function Marco({ children }: { children: ReactNode }) {
   const membresia = yo?.membresia_activa
   const varios = (yo?.membresias.length ?? 0) > 1
   const visibles = (lista: Enlace[]) => lista.filter((e) => !e.permiso || puede(yo, e.permiso))
+  // Cuántos casos esperan revisión técnica: la misma consulta que la lista de casos (se comparte el caché).
+  const puedeRevisar = puede(yo, 'revisar')
+  const abiertos = useQuery({
+    queryKey: ['casos', 'abiertos'],
+    queryFn: () => pedir(api.GET('/api/casos', { params: { query: { estado: 'abierto', limit: 500 } } })),
+    enabled: puedeRevisar,
+  })
+  const porRevisar = (abiertos.data?.results ?? []).filter((c) => !c.en_espera && c.trabajos.some((t) => t.etapa_actual?.rol === 'revision')).length
   const rol = membresia?.roles?.map((r) => yo?.roles_disponibles.find((x) => x.valor === r)?.nombre ?? r).join(' · ')
 
   async function salir() {
@@ -126,7 +140,7 @@ export function Marco({ children }: { children: ReactNode }) {
           </NavLink>
           <nav aria-label="Principal" className="flex gap-0.5 overflow-x-auto lg:flex-col">
             {visibles(PRINCIPAL).map((e) => (
-              <Item key={e.a} {...e} />
+              <Item key={e.a} {...e} numero={e.cuenta === 'revision' ? porRevisar : undefined} />
             ))}
             <span aria-hidden className="mx-3 my-2 hidden h-px bg-ln lg:block" />
             {visibles(ADMINISTRACION).map((e) => (

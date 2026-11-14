@@ -1346,6 +1346,7 @@ export interface components {
             checklist: string[];
             whatsapp: string;
             matricula: string;
+            email: string;
             revisiones: components["schemas"]["RevisionTecnica"][];
         };
         Etapa: {

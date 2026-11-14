@@ -8,6 +8,7 @@ import { AlarmClock, ArrowDown, ArrowRight, CalendarClock, Check, CheckCheck, Ci
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { api, pedir, type Esquemas } from '../api/cliente'
+import { ConversacionOdontologo } from '../components/ConversacionOdontologo'
 import { CabeceraRevision, type DatosRevision, type DecisionRevision, type Marca } from '../components/CabeceraRevision'
 import { PanelEscaneo } from '../components/PanelEscaneo'
 import { Button } from '../components/ui/button'
@@ -49,6 +50,9 @@ const RESULTADO: Record<DecisionRevision, { titulo: string; detalle: string; ton
   consulta: { titulo: 'Aprobado con nota técnica: pasó a diseño', detalle: 'CAD ve la duda marcada en el escaneo y en el caso.', tono: 'wa' },
   pedir: { titulo: 'En espera del odontólogo', detalle: 'El caso no avanza hasta que llegue lo que falta.', tono: 'ba' },
 }
+
+/** "MP 1004" -> "1004": el rótulo "M.P." ya lo pone la pantalla. */
+const sinPrefijo = (m: string) => m.replace(/^m\.?\s*p\.?\s*/i, '')
 
 const ORIGEN: Record<string, string> = { papel: 'Papel', caja: 'En la caja', digital: 'Digital' }
 
@@ -236,7 +240,7 @@ function TiraCola({ actual, cola }: { actual: string; cola: Caso[] }) {
   const visibles = orden.slice(0, 4)
   const este = cola.find((c) => c.id === actual)
   if (este && !visibles.includes(este)) visibles[visibles.length - 1] = este
-  if (cola.length < 2) return null
+  if (!cola.length) return null
   const pendientes = cola.filter((c) => !c.en_espera).length
   return (
     <nav aria-label="Casos para revisar" className="flex items-stretch gap-3">
@@ -286,7 +290,7 @@ function datosRevision(c: Caso, estado: EstadoRevision, archivos: number, revisa
     color: t?.color ? { nombre: t.color, hex: TONOS_VITA[t.color] ?? '#EAD9B8' } : null,
     pide: c.profesional.nombre,
     clinica: c.cliente.nombre,
-    matricula: estado.matricula,
+    matricula: sinPrefijo(estado.matricula),
     paciente: c.paciente || '—',
     orden: c.orden_origen ? { codigo: c.orden_numero || ORIGEN[c.orden_origen] || 'Orden', estado: c.orden_firmada ? 'firmada' : 'sin firma' } : null,
     archivos: archivos === 1 ? '1 archivo' : `${archivos} archivos`,
@@ -468,10 +472,16 @@ function RevisionCaso({ c, estado }: { c: Caso; estado: EstadoRevision }) {
                 </Link>
               </Button>
               <Button variant="ink" className="min-h-10 px-3.5 text-[14px]" asChild>
-                <Link to={`/casos/${c.id}#conversacion-caso`}>
+                <a
+                  href="#conversacion"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    document.getElementById('conversacion')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }}
+                >
                   Hablar con el odontólogo
                   <ArrowRight aria-hidden className="size-4" />
-                </Link>
+                </a>
               </Button>
             </>
           }
@@ -746,6 +756,16 @@ function RevisionCaso({ c, estado }: { c: Caso; estado: EstadoRevision }) {
             )}
           </Card>
         </section>
+      </div>
+
+      <div id="conversacion" className="scroll-mt-28">
+        <ConversacionOdontologo
+          casoId={c.id}
+          codigo={c.codigo}
+          od={{ nombre: c.profesional.nombre, clinica: c.cliente.nombre, matricula: sinPrefijo(estado.matricula), whatsapp: estado.whatsapp, mail: estado.email, paga: c.cliente.nombre }}
+          resumen={[t?.item_nombre.toLowerCase(), t ? `pieza ${piezasDe(t)}` : ''].filter(Boolean).join(', ')}
+          esperando={c.en_espera}
+        />
       </div>
     </>
   )

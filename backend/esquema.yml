@@ -2561,12 +2561,15 @@ components:
           type: string
         matricula:
           type: string
+        email:
+          type: string
         revisiones:
           type: array
           items:
             $ref: '#/components/schemas/RevisionTecnica'
       required:
       - checklist
+      - email
       - en_espera
       - en_revision
       - matricula

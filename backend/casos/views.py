@@ -475,6 +475,7 @@ class EstadoRevisionSerializer(serializers.Serializer):
     #: Para el enlace wa.me: el WhatsApp del odontólogo, o su teléfono si no cargaron otro.
     whatsapp = serializers.CharField()
     matricula = serializers.CharField()
+    email = serializers.CharField()
     revisiones = RevisionTecnicaSerializer(many=True)
 
 
@@ -494,6 +495,7 @@ def _estado_revision(caso):
         'checklist': items,
         'whatsapp': profesional.whatsapp or profesional.telefono,
         'matricula': profesional.matricula,
+        'email': profesional.email,
         'revisiones': RevisionTecnicaSerializer(revisiones, many=True).data,
     }
 
