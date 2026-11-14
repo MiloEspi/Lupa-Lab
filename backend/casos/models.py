@@ -75,6 +75,10 @@ class Caso(ModeloDeLaboratorio):
         blank=True,
         related_name='+',
     )
+    #: Revisión técnica pidió algo al odontólogo: el caso no avanza hasta que llegue (S12).
+    #: Como el cambio sin confirmar, es una marca que frena, no un estado del caso.
+    en_espera = models.BooleanField(default=False)
+    espera_desde = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-numero']
@@ -220,3 +224,35 @@ class ConfirmacionLectura(ModeloBase):
 
     def __str__(self):
         return f'{self.revision} leída por {self.membresia_id}'
+
+
+class RevisionTecnica(ModeloBase):
+    """
+    Una pasada de la revisión técnica (S12): el checklist marcado y qué se decidió. Los
+    puntos se guardan con su texto copiado, así una edición de la plantilla no cambia
+    revisiones viejas. Nunca se edita: si llega lo que faltaba, se revisa de nuevo.
+    """
+
+    class Decision(models.TextChoices):
+        APROBAR = 'aprobar', 'Aprobado'
+        CONSULTA = 'consulta', 'Aprobado con nota técnica'
+        PEDIR = 'pedir', 'Pedido al odontólogo'
+
+    class Marca(models.TextChoices):
+        OK = 'ok', 'Bien'
+        FALTA = 'falta', 'Falta'
+        DUDA = 'duda', 'Con duda'
+
+    caso = models.ForeignKey(Caso, on_delete=models.CASCADE, related_name='revisiones_tecnicas')
+    #: [{"texto": "Márgenes de la preparación", "marca": "duda"}]
+    items = models.JSONField()
+    decision = models.CharField(max_length=10, choices=Decision.choices)
+    #: Lo que se le pidió al odontólogo, tal cual salió por WhatsApp.
+    mensaje = models.TextField(blank=True)
+    por = models.ForeignKey('cuentas.Membresia', on_delete=models.PROTECT, related_name='+')
+
+    class Meta:
+        ordering = ['-creado']
+
+    def __str__(self):
+        return f'{self.caso_id}: {self.decision}'

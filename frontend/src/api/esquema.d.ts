@@ -476,6 +476,56 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/casos/{id}/revision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        get: operations["casos_revision_retrieve"];
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_revision_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/{id}/revision/llego": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+         *     laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+         *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+         *     no existe: no se distingue "existe pero no es tuyo".
+         */
+        post: operations["casos_revision_llego_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/casos/{id}/trabajos/{trabajo}/avanzar": {
         parameters: {
             query?: never;
@@ -1163,6 +1213,9 @@ export interface components {
             readonly creado: string;
             readonly version_ficha: number;
             readonly cambio_pendiente: components["schemas"]["CambioPendiente"] | null;
+            readonly en_espera: boolean;
+            /** Format: date-time */
+            readonly espera_desde: string | null;
             readonly orden_origen: components["schemas"]["OrdenOrigenEnum"] | components["schemas"]["BlankEnum"];
             readonly orden_numero: string;
             /** Format: date */
@@ -1266,6 +1319,13 @@ export interface components {
             /** @default  */
             comentario: string;
         };
+        /**
+         * @description * `aprobar` - Aprobado
+         *     * `consulta` - Aprobado con nota técnica
+         *     * `pedir` - Pedido al odontólogo
+         * @enum {string}
+         */
+        DecisionEnum: "aprobar" | "consulta" | "pedir";
         Descarga: {
             url: string;
         };
@@ -1279,6 +1339,14 @@ export interface components {
         ElegirLaboratorioRequest: {
             /** Format: uuid */
             laboratorio: string;
+        };
+        EstadoRevision: {
+            en_revision: boolean;
+            en_espera: boolean;
+            checklist: string[];
+            whatsapp: string;
+            matricula: string;
+            revisiones: components["schemas"]["RevisionTecnica"][];
         };
         Etapa: {
             readonly orden: number;
@@ -1411,12 +1479,23 @@ export interface components {
             dias_minimos?: number;
             activo?: boolean;
         };
+        ItemRevisado: {
+            texto: string;
+            marca: components["schemas"]["MarcaEnum"];
+        };
         Laboratorio: {
             /** Format: uuid */
             readonly id: string;
             readonly nombre: string;
             readonly capacidad_diaria: number;
         };
+        /**
+         * @description * `ok` - Bien
+         *     * `falta` - Falta
+         *     * `duda` - Con duda
+         * @enum {string}
+         */
+        MarcaEnum: "ok" | "falta" | "duda";
         MembresiaPropia: {
             /** Format: uuid */
             readonly id: string;
@@ -1677,6 +1756,22 @@ export interface components {
             password: string;
             uid: string;
             token: string;
+        };
+        RevisarRequest: {
+            marcas: string[];
+            decision: components["schemas"]["DecisionEnum"];
+            /** @default  */
+            mensaje: string;
+        };
+        RevisionTecnica: {
+            /** Format: uuid */
+            readonly id: string;
+            readonly items: components["schemas"]["ItemRevisado"][];
+            readonly decision: components["schemas"]["DecisionEnum"];
+            readonly mensaje: string;
+            readonly por: string;
+            /** Format: date-time */
+            readonly creado: string;
         };
         /**
          * @description * `recepcion` - Recepción
@@ -2480,6 +2575,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Mensaje"];
+                };
+            };
+        };
+    };
+    casos_revision_retrieve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstadoRevision"];
+                };
+            };
+        };
+    };
+    casos_revision_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RevisarRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["RevisarRequest"];
+                "multipart/form-data": components["schemas"]["RevisarRequest"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstadoRevision"];
+                };
+            };
+        };
+    };
+    casos_revision_llego_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EstadoRevision"];
                 };
             };
         };

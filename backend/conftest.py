@@ -62,6 +62,13 @@ def entrar(cliente):
     return entrar_como
 
 
+def aprobar_revision(cliente, caso_id):
+    """Cierra la revisión técnica con todo "Bien" (desde la S12 no se pasa con avanzar)."""
+    checklist = cliente.get(f'/api/casos/{caso_id}/revision').json()['checklist']
+    datos = {'marcas': ['ok'] * len(checklist), 'decision': 'aprobar'}
+    return cliente.post(f'/api/casos/{caso_id}/revision', datos, format='json')
+
+
 @pytest.fixture
 def catalogo(laboratorio):
     from catalogo.semilla import cargar_catalogo

@@ -11,7 +11,7 @@ from rest_framework.test import APIClient
 
 from auditoria.models import Evento
 from catalogo.models import ItemCatalogo
-from conftest import PASSWORD
+from conftest import PASSWORD, aprobar_revision
 from cuentas.models import Rol
 
 pytestmark = pytest.mark.django_db
@@ -50,8 +50,8 @@ def caso(equipo, catalogo, cliente_y_profesional):
         'trabajos': [{'item': str(item.id), 'piezas': CORONA, 'material': 'Zirconio', 'color': 'A2'}],
     }
     caso = equipo['recepcion'].post('/api/casos', datos, format='json').json()
-    for _ in range(2):  # Recepción y Revisión técnica
-        equipo['supervision'].post(f'/api/casos/{caso["id"]}/trabajos/{caso["trabajos"][0]["id"]}/avanzar')
+    equipo['supervision'].post(f'/api/casos/{caso["id"]}/trabajos/{caso["trabajos"][0]["id"]}/avanzar')
+    assert aprobar_revision(equipo['supervision'], caso['id']).status_code == 201
     return equipo['supervision'].get(f'/api/casos/{caso["id"]}').json()
 
 

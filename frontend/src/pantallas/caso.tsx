@@ -71,7 +71,8 @@ function datosCabecera(c: CasoApi): DatosCabecera {
     entrega: fechaCorta(c.fecha_prometida),
     alerta: est.tono === 'alerta' ? est.texto : faltan !== null && faltan < 0 ? 'Atrasado' : undefined,
     falta: faltan === null ? 'Sin fecha' : faltan === 1 ? 'Falta 1 día hábil' : `Faltan ${faltan} días hábiles`,
-    frenado: c.cambio_pendiente ? 'Cambio sin confirmar' : undefined,
+    frenado: c.cambio_pendiente ? 'Cambio sin confirmar' : c.en_espera ? 'En espera del odontólogo' : undefined,
+    revision: t?.etapa_actual?.rol === 'revision' ? `/revision/${c.id}` : undefined,
   }
 }
 
@@ -193,6 +194,10 @@ export function CasoDetalle() {
       refrescar()
     },
   })
+  const llego = useMutation({
+    mutationFn: () => pedir(api.POST('/api/casos/{id}/revision/llego', { params: { path: { id } } })),
+    onSuccess: () => (refrescar(), cliente.invalidateQueries({ queryKey: ['revision', id] })),
+  })
   const avanzar = useMutation({
     mutationFn: (trabajo: string) => pedir(api.POST('/api/casos/{id}/trabajos/{trabajo}/avanzar', { params: { path: { id, trabajo } } })),
     onSuccess: refrescar,
@@ -203,7 +208,7 @@ export function CasoDetalle() {
   const c = caso.data
   const t = c.trabajos[0]
   const actual = indiceEtapa(t)
-  const frenado = !!c.cambio_pendiente
+  const frenado = !!c.cambio_pendiente || c.en_espera
   const misRoles = yo?.membresia_activa?.roles ?? []
   const lista = mensajes.data ?? []
 
@@ -219,7 +224,7 @@ export function CasoDetalle() {
       nombre: e.nombre,
       quien: e.hecha_por ?? (e.en_consultorio ? 'En el consultorio' : NOMBRE_ROL[e.rol] ?? e.rol),
       cuando: hecha && e.fin ? cuando(e.fin) : enCurso ? (frenado ? 'frenado' : 'en curso') : 'pendiente',
-      texto: hecha ? 'Hecha.' : enCurso ? (frenado ? 'Frenado: hay un cambio de ficha sin confirmar.' : 'En curso.') : 'Pendiente.',
+      texto: hecha ? 'Hecha.' : enCurso ? (frenado ? (c.en_espera ? 'En espera: Revisión técnica le pidió algo al odontólogo.' : 'Frenado: hay un cambio de ficha sin confirmar.') : 'En curso.') : 'Pendiente.',
       meta: hecha ? duracion(e.inicio, e.fin) : enCurso && e.inicio ? `desde ${cuando(e.inicio)}` : '',
       fotos: [...deMensajes, ...sueltas].map(fotoDe),
     }
@@ -253,6 +258,8 @@ export function CasoDetalle() {
   const anterior = actual > 0 ? t?.etapas[actual - 1] : undefined
   const etapaActual = t?.etapa_actual
   const puedeAvanzar = !!etapaActual && !frenado && c.estado === 'abierto' && (misRoles.includes(etapaActual.rol as never) || misRoles.includes('supervision'))
+  const enRevision = etapaActual?.rol === 'revision'
+  const puedeMarcarLlegada = c.en_espera && c.estado === 'abierto' && !!yo && (yo.permisos.includes('revisar') || yo.permisos.includes('registrar_cambio'))
   const puedeCambiar = !!yo?.permisos.includes('registrar_cambio') && c.estado === 'abierto'
 
   const conversacion = (
@@ -398,7 +405,8 @@ export function CasoDetalle() {
           <PenLine aria-hidden className="size-4" /> Registrar cambio
         </Button>
       )}
-      {puedeAvanzar && t && (
+      {/* La revisión técnica no se termina con un botón: se cierra con el checklist (la cabecera lleva a Revisión). */}
+      {puedeAvanzar && t && !enRevision && (
         <Button variant="ink" className="min-h-11 px-3.5 text-[14px]" disabled={avanzar.isPending} onClick={() => avanzar.mutate(t.id)}>
           <Check aria-hidden className="size-4" /> Terminar {etapaActual?.nombre}
         </Button>
@@ -431,6 +439,23 @@ export function CasoDetalle() {
           </div>
           <DetalleEtapa e={E[sel]} pendiente={sel > actual} comentarios={comentarios[sel] ?? []} notas={notasEtapa[sel] ?? 0} onFoto={(f) => subirFotoEtapa(sel, f)} onComentar={(txt) => comentarEtapa(sel, txt)} onAbrirFoto={setGrande} ancho />
         </Card>
+      )}
+
+      {c.en_espera && (
+        <section aria-label="En espera del odontólogo" className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-ficha border border-ba bg-baS px-4 py-3">
+          <div className="grid min-w-0 flex-[999_1_340px] gap-0.5">
+            <strong className="text-[16px] font-semibold text-ba">En espera del odontólogo</strong>
+            <span className="text-[14px]">
+              Revisión técnica pidió lo que falta{c.espera_desde ? ` ${cuando(c.espera_desde)}` : ''}. El caso no avanza hasta que llegue: el pedido está en la conversación.
+            </span>
+          </div>
+          {puedeMarcarLlegada && (
+            <Button disabled={llego.isPending} onClick={() => llego.mutate()}>
+              Llegó lo que faltaba
+            </Button>
+          )}
+          {llego.error && <Aviso>{llego.error.message}</Aviso>}
+        </section>
       )}
 
       {pendiente ? (

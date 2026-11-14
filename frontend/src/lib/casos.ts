@@ -59,6 +59,7 @@ export function estadoCaso(c: Caso): { texto: string; tono: Tono } {
   if (c.estado === 'entregado') return { texto: 'Entregado', tono: 'normal' }
   if (c.estado === 'cancelado') return { texto: 'Cancelado', tono: 'normal' }
   if (c.cambio_pendiente) return { texto: 'Cambio sin confirmar', tono: 'frenado' }
+  if (c.en_espera) return { texto: 'En espera del odontólogo', tono: 'frenado' }
   if (!c.fecha_prometida) return { texto: 'Sin fecha prometida', tono: 'normal' }
   const faltan = habilesHasta(c.fecha_prometida)
   if (faltan < 0) return { texto: 'Atrasado', tono: 'frenado' }
@@ -142,3 +143,13 @@ export const coloresDeFamilia = (hex?: string) =>
 export const TONOS_VITA: Record<string, string> = { A1: '#F4EBD6', A2: '#EEE0C2', A3: '#E6D2AC', 'A3.5': '#E0C89E', A4: '#D6B988', B1: '#F3ECD9', B2: '#EBDDBE', B3: '#E2CFA6', B4: '#D9C192', C1: '#E5DCC8', C2: '#DCCFB4', C3: '#D2C3A3', C4: '#C6B48F', D2: '#E8DFCF', D3: '#DDD1BC', D4: '#D3C5AC' }
 
 export const NOMBRE_ROL: Record<string, string> = { recepcion: 'Recepción', revision: 'Revisión técnica', cad: 'CAD', produccion: 'Producción', control: 'Control', supervision: 'Supervisión', administracion: 'Administración' }
+
+const DIENTES = ['incisivo central', 'incisivo lateral', 'canino', 'primer premolar', 'segundo premolar', 'primer molar', 'segundo molar', 'tercer molar']
+const CUADRANTES: Record<string, string> = { '1': 'superior derecho', '2': 'superior izquierdo', '3': 'inferior izquierdo', '4': 'inferior derecho' }
+/** "36" -> "Primer molar inferior izquierdo (cuadrante 3)." */
+export function describirPieza(p: string) {
+  const diente = DIENTES[Number(p[1]) - 1]
+  const cuadrante = CUADRANTES[p[0] ?? '']
+  if (!diente || !cuadrante || p.length !== 2) return ''
+  return `${diente[0].toUpperCase()}${diente.slice(1)} ${cuadrante} (cuadrante ${p[0]}).`
+}

@@ -12,7 +12,7 @@ from cuentas.permisos import LaboratorioScopedMixin
 from directorio.models import Cliente, Profesional
 
 from . import servicios
-from .models import CAMPOS_DE_FICHA, Caso, EtapaTrabajo, RevisionFicha, Trabajo
+from .models import CAMPOS_DE_FICHA, Caso, EtapaTrabajo, RevisionFicha, RevisionTecnica, Trabajo
 from .validadores import normalizar_color, validar_piezas
 
 # --- Lectura -----------------------------------------------------------------------------
@@ -148,6 +148,8 @@ class CasoSerializer(serializers.ModelSerializer):
             'creado',
             'version_ficha',
             'cambio_pendiente',
+            'en_espera',
+            'espera_desde',
             'orden_origen',
             'orden_numero',
             'orden_fecha',
@@ -444,3 +446,78 @@ class CargaView(LaboratorioScopedMixin, APIView):
             .order_by('fecha_prometida')
         )
         return Response([{'fecha': f['fecha_prometida'], 'casos': f['casos']} for f in filas])
+
+
+# --- Revisión técnica (S12) -----------------------------------------------------------------
+
+
+class ItemRevisadoSerializer(serializers.Serializer):
+    texto = serializers.CharField()
+    marca = serializers.ChoiceField(choices=RevisionTecnica.Marca.choices)
+
+
+class RevisionTecnicaSerializer(serializers.ModelSerializer):
+    items = ItemRevisadoSerializer(many=True, read_only=True)
+    por = serializers.CharField(source='por.usuario.nombre_visible', read_only=True)
+
+    class Meta:
+        model = RevisionTecnica
+        fields = ['id', 'items', 'decision', 'mensaje', 'por', 'creado']
+        read_only_fields = fields
+
+
+class EstadoRevisionSerializer(serializers.Serializer):
+    #: Si hay algún trabajo en Revisión técnica ahora: si no, solo se ve el historial.
+    en_revision = serializers.BooleanField()
+    en_espera = serializers.BooleanField()
+    #: Los puntos a revisar, de la plantilla de cada trabajo (sin repetir).
+    checklist = serializers.ListField(child=serializers.CharField())
+    #: Para el enlace wa.me: el WhatsApp del odontólogo, o su teléfono si no cargaron otro.
+    whatsapp = serializers.CharField()
+    matricula = serializers.CharField()
+    revisiones = RevisionTecnicaSerializer(many=True)
+
+
+class RevisarSerializer(serializers.Serializer):
+    marcas = serializers.ListField(child=serializers.CharField(allow_blank=True))
+    decision = serializers.ChoiceField(choices=RevisionTecnica.Decision.choices)
+    mensaje = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+def _estado_revision(caso):
+    trabajos, items = servicios.en_revision(caso)
+    revisiones = caso.revisiones_tecnicas.select_related('por__usuario')
+    profesional = caso.profesional
+    return {
+        'en_revision': bool(trabajos),
+        'en_espera': caso.en_espera,
+        'checklist': items,
+        'whatsapp': profesional.whatsapp or profesional.telefono,
+        'matricula': profesional.matricula,
+        'revisiones': RevisionTecnicaSerializer(revisiones, many=True).data,
+    }
+
+
+class RevisionView(LaboratorioScopedMixin, APIView):
+    @extend_schema(responses=EstadoRevisionSerializer)
+    def get(self, request, pk):
+        caso = self.get_scoped_object(request, Caso, pk=pk)
+        return Response(_estado_revision(caso))
+
+    @extend_schema(request=RevisarSerializer, responses={201: EstadoRevisionSerializer})
+    def post(self, request, pk):
+        caso = self.get_scoped_object(request, Caso, pk=pk)
+        datos = RevisarSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        servicios.revisar(request, caso, **datos.validated_data)
+        caso.refresh_from_db()
+        return Response(_estado_revision(caso), status=status.HTTP_201_CREATED)
+
+
+class LlegoView(LaboratorioScopedMixin, APIView):
+    @extend_schema(request=None, responses=EstadoRevisionSerializer)
+    def post(self, request, pk):
+        caso = self.get_scoped_object(request, Caso, pk=pk)
+        servicios.llego_lo_pedido(request, caso)
+        caso.refresh_from_db()
+        return Response(_estado_revision(caso))

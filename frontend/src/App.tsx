@@ -13,6 +13,8 @@ import { Marco } from './ui/marco'
 
 // El caso trae el visor 3D (three.js): se carga aparte, solo cuando se abre un caso.
 const CasoDetalle = lazy(() => import('./pantallas/caso').then((m) => ({ default: m.CasoDetalle })))
+const Revision = lazy(() => import('./pantallas/revision').then((m) => ({ default: m.Revision })))
+const ColaRevision = lazy(() => import('./pantallas/revision').then((m) => ({ default: m.ColaRevision })))
 
 /** Una ruta que pide un permiso: sin él, vuelve al inicio (el backend igual lo rechaza). */
 function ConPermiso({ accion }: { accion: string }) {
@@ -47,6 +49,8 @@ export function App() {
         <Route index element={<Navigate to="/casos" replace />} />
         <Route path="casos" element={<Casos />} />
         <Route path="casos/:id" element={<Suspense fallback={<Cargando />}><CasoDetalle /></Suspense>} />
+        <Route path="revision" element={<Suspense fallback={<Cargando />}><ColaRevision /></Suspense>} />
+        <Route path="revision/:id" element={<Suspense fallback={<Cargando />}><Revision /></Suspense>} />
         <Route element={<ConPermiso accion="crear_caso" />}>
           <Route path="nuevo" element={<NuevoCaso />} />
         </Route>

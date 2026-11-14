@@ -51,6 +51,8 @@ api = [
     path('casos/<uuid:pk>/cambios', cs.CambiosView.as_view()),
     path('casos/<uuid:pk>/cambios/confirmar', cs.ConfirmarCambioView.as_view()),
     path('casos/<uuid:pk>/fichas', cs.FichasView.as_view()),
+    path('casos/<uuid:pk>/revision', cs.RevisionView.as_view()),
+    path('casos/<uuid:pk>/revision/llego', cs.LlegoView.as_view()),
     path('casos/<uuid:pk>/archivos', ar.ArchivosView.as_view()),
     path('casos/<uuid:pk>/archivos/<uuid:archivo>/confirmar', ar.ConfirmarArchivoView.as_view()),
     path('casos/<uuid:pk>/archivos/<uuid:archivo>/descarga', ar.DescargaView.as_view()),

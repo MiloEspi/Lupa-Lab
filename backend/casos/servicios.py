@@ -10,7 +10,7 @@ from rest_framework.exceptions import APIException, PermissionDenied, Validation
 
 from auditoria.servicios import registrar
 from cuentas.models import Rol
-from cuentas.permisos import Accion, exigir, puede_avanzar_etapa, puede_confirmar_cambio
+from cuentas.permisos import Accion, exigir, puede, puede_avanzar_etapa, puede_confirmar_cambio
 
 from .models import (
     Caso,
@@ -18,6 +18,7 @@ from .models import (
     ContadorCasos,
     EtapaTrabajo,
     RevisionFicha,
+    RevisionTecnica,
     Trabajo,
     foto_de_trabajos,
 )
@@ -26,6 +27,11 @@ from .models import (
 class CambioSinConfirmar(APIException):
     status_code = status.HTTP_409_CONFLICT
     default_detail = 'Hay un cambio de ficha sin confirmar: primero tiene que leerlo quien tiene el trabajo.'
+
+
+class EnEspera(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = 'El caso está en espera del odontólogo: avanza cuando llegue lo que se pidió.'
 
 
 def siguiente_numero(laboratorio) -> int:
@@ -84,19 +90,25 @@ def _exigir_abierto(caso):
 
 
 @transaction.atomic
-def avanzar(request, trabajo):
+def avanzar(request, trabajo, *, desde_revision=False):
     """Termina la etapa en curso y arranca la siguiente. Solo quien tiene el rol de esa etapa
-    (o Supervisión). En la S7 se suma: no avanza con un cambio sin confirmar."""
+    (o Supervisión). No avanza con un cambio sin confirmar (S7) ni en espera del odontólogo
+    (S12). La revisión técnica de un trabajo con checklist se cierra solo con `revisar`: si
+    no, "Falta" no frenaría nada."""
     caso = Caso.objects.select_for_update().get(pk=trabajo.caso_id)
     _exigir_abierto(caso)
     if caso.cambio_pendiente_id:
         raise CambioSinConfirmar()
+    if caso.en_espera:
+        raise EnEspera()
     etapas = list(trabajo.etapas.select_for_update())
     actual = next((e for e in etapas if e.estado == EtapaTrabajo.Estado.EN_CURSO), None)
     if actual is None:
         raise ValidationError({'detail': 'Este trabajo ya pasó por todas sus etapas.'})
     if not puede_avanzar_etapa(request.membresia, actual):
         raise PermissionDenied(f'"{actual.nombre}" la avanza {actual.get_rol_display()}.')
+    if actual.rol == Rol.REVISION and not desde_revision and trabajo.item.plantilla_checklist_id:
+        raise ValidationError({'detail': 'La revisión técnica se cierra con el checklist, desde Revisión.'})
     ahora = timezone.now()
     actual.estado, actual.fin, actual.hecha_por = EtapaTrabajo.Estado.HECHA, ahora, request.membresia
     actual.save(update_fields=['estado', 'fin', 'hecha_por'])
@@ -263,3 +275,115 @@ def _volver(caso, trabajo_id, orden):
     destino.estado, destino.inicio = EtapaTrabajo.Estado.EN_CURSO, timezone.now()
     destino.save(update_fields=['estado', 'inicio'])
     return destino
+
+
+# --- Revisión técnica (S12) -----------------------------------------------------------------
+
+
+def en_revision(caso):
+    """Los trabajos del caso que están en una etapa de Revisión técnica y el checklist que
+    les toca: los puntos de sus plantillas, sin repetir, en orden."""
+    trabajos = [
+        t
+        for t in caso.trabajos.select_related('item__plantilla_checklist').prefetch_related('etapas')
+        if (e := t.etapa_actual) is not None and e.rol == Rol.REVISION
+    ]
+    items = []
+    for t in trabajos:
+        for texto in t.item.plantilla_checklist.items if t.item.plantilla_checklist else []:
+            if texto not in items:
+                items.append(texto)
+    return trabajos, items
+
+
+def _lista(textos):
+    return ', '.join(textos).lower()
+
+
+@transaction.atomic
+def revisar(request, caso, *, marcas, decision, mensaje=''):
+    """
+    Cierra una pasada de la revisión técnica. Reglas: se marcan todos los puntos; con algo
+    en "Falta" no se aprueba (se pide o se aprueba con nota técnica); "pedir" deja el caso
+    en espera y el mensaje en la conversación (lo manda una persona por WhatsApp, D15).
+    """
+    exigir(request.membresia, Accion.REVISAR, 'La revisión técnica la hace Revisión técnica.')
+    caso = Caso.objects.select_for_update().get(pk=caso.pk)
+    _exigir_abierto(caso)
+    if caso.cambio_pendiente_id:
+        raise CambioSinConfirmar()
+    trabajos, items = en_revision(caso)
+    if not trabajos:
+        raise ValidationError({'detail': 'Este caso no está en revisión técnica.'})
+    if len(marcas) != len(items):
+        raise ValidationError({'marcas': [f'El checklist tiene {len(items)} puntos.']})
+    pares = list(zip(items, marcas, strict=True))
+    sin_marcar = [t for t, m in pares if m not in RevisionTecnica.Marca.values]
+    if sin_marcar:
+        raise ValidationError({'marcas': [f'Marcá todos los puntos. Falta revisar: {_lista(sin_marcar)}.']})
+    faltan = [t for t, m in pares if m == RevisionTecnica.Marca.FALTA]
+    dudas = [t for t, m in pares if m == RevisionTecnica.Marca.DUDA]
+    if decision == RevisionTecnica.Decision.APROBAR and faltan:
+        raise ValidationError(
+            {'decision': [f'No se aprueba con puntos en "Falta" ({_lista(faltan)}). Pedilos o aprobá con nota.']}
+        )
+    mensaje = mensaje.strip()
+    pedir = decision == RevisionTecnica.Decision.PEDIR
+    if pedir and not mensaje:
+        raise ValidationError({'mensaje': ['Escribí qué le pedís al odontólogo.']})
+
+    from hilo.models import Mensaje
+    from hilo.servicios import etapa_del_caso, mensaje_de_sistema
+
+    revision = RevisionTecnica.objects.create(
+        caso=caso,
+        items=[{'texto': t, 'marca': m} for t, m in pares],
+        decision=decision,
+        mensaje=mensaje if pedir else '',
+        por=request.membresia,
+    )
+    if pedir:
+        caso.en_espera, caso.espera_desde = True, timezone.now()
+        caso.save(update_fields=['en_espera', 'espera_desde', 'actualizado'])
+        etapa, orden = etapa_del_caso(caso)
+        Mensaje.objects.create(
+            caso=caso,
+            autor=request.membresia,
+            tipo=Mensaje.Tipo.ODONTOLOGO,
+            texto=mensaje,
+            nota='Pedido por WhatsApp desde la revisión técnica',
+            etapa=etapa,
+            etapa_orden=orden,
+        )
+    else:
+        texto = f'Revisión técnica: {revision.get_decision_display().lower()}.'
+        if dudas:
+            texto += f' Con duda: {_lista(dudas)}.'
+        if faltan:
+            texto += f' Falta: {_lista(faltan)}.'
+        # Antes de avanzar, así el mensaje queda en la etapa de la revisión.
+        mensaje_de_sistema(caso, texto)
+        for trabajo in trabajos:
+            avanzar(request, trabajo, desde_revision=True)
+    registrar(request, 'revision_tecnica', caso, despues={'decision': decision, 'faltan': faltan, 'dudas': dudas})
+    return revision
+
+
+@transaction.atomic
+def llego_lo_pedido(request, caso):
+    """Llegó lo que se le pidió al odontólogo: el caso vuelve a la bandeja de revisión. Lo
+    marca Revisión técnica o Recepción, que es quien suele recibirlo."""
+    membresia = request.membresia
+    if not (puede(membresia, Accion.REVISAR) or puede(membresia, Accion.REGISTRAR_CAMBIO)):
+        raise PermissionDenied('Lo marca Revisión técnica o Recepción.')
+    caso = Caso.objects.select_for_update().get(pk=caso.pk)
+    _exigir_abierto(caso)
+    if not caso.en_espera:
+        raise ValidationError({'detail': 'El caso no está esperando nada del odontólogo.'})
+    caso.en_espera, caso.espera_desde = False, None
+    caso.save(update_fields=['en_espera', 'espera_desde', 'actualizado'])
+    from hilo.servicios import mensaje_de_sistema
+
+    mensaje_de_sistema(caso, f'Llegó lo que se le pidió al odontólogo (lo marcó {membresia.usuario.nombre_visible}).')
+    registrar(request, 'espera_resuelta', caso)
+    return caso

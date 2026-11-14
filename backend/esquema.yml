@@ -767,6 +767,95 @@ paths:
               schema:
                 $ref: '#/components/schemas/Mensaje'
           description: ''
+  /api/casos/{id}/revision:
+    get:
+      operationId: casos_revision_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoRevision'
+          description: ''
+    post:
+      operationId: casos_revision_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevisarRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RevisarRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RevisarRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoRevision'
+          description: ''
+  /api/casos/{id}/revision/llego:
+    post:
+      operationId: casos_revision_llego_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstadoRevision'
+          description: ''
   /api/casos/{id}/trabajos/{trabajo}/avanzar:
     post:
       operationId: casos_trabajos_avanzar_create
@@ -2134,6 +2223,14 @@ components:
           - $ref: '#/components/schemas/CambioPendiente'
           nullable: true
           readOnly: true
+        en_espera:
+          type: boolean
+          readOnly: true
+        espera_desde:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
         orden_origen:
           readOnly: true
           oneOf:
@@ -2167,6 +2264,8 @@ components:
       - cliente
       - codigo
       - creado
+      - en_espera
+      - espera_desde
       - estado
       - fecha_ingreso
       - fecha_prometida
@@ -2407,6 +2506,16 @@ components:
           type: string
           default: ''
           maxLength: 300
+    DecisionEnum:
+      enum:
+      - aprobar
+      - consulta
+      - pedir
+      type: string
+      description: |-
+        * `aprobar` - Aprobado
+        * `consulta` - Aprobado con nota técnica
+        * `pedir` - Pedido al odontólogo
     Descarga:
       type: object
       properties:
@@ -2437,6 +2546,32 @@ components:
           format: uuid
       required:
       - laboratorio
+    EstadoRevision:
+      type: object
+      properties:
+        en_revision:
+          type: boolean
+        en_espera:
+          type: boolean
+        checklist:
+          type: array
+          items:
+            type: string
+        whatsapp:
+          type: string
+        matricula:
+          type: string
+        revisiones:
+          type: array
+          items:
+            $ref: '#/components/schemas/RevisionTecnica'
+      required:
+      - checklist
+      - en_espera
+      - en_revision
+      - matricula
+      - revisiones
+      - whatsapp
     Etapa:
       type: object
       properties:
@@ -2809,6 +2944,16 @@ components:
       - familia
       - nombre
       - plantilla_etapas
+    ItemRevisado:
+      type: object
+      properties:
+        texto:
+          type: string
+        marca:
+          $ref: '#/components/schemas/MarcaEnum'
+      required:
+      - marca
+      - texto
     Laboratorio:
       type: object
       properties:
@@ -2826,6 +2971,16 @@ components:
       - capacidad_diaria
       - id
       - nombre
+    MarcaEnum:
+      enum:
+      - ok
+      - falta
+      - duda
+      type: string
+      description: |-
+        * `ok` - Bien
+        * `falta` - Falta
+        * `duda` - Con duda
     MembresiaPropia:
       type: object
       properties:
@@ -3564,6 +3719,54 @@ components:
       - password
       - token
       - uid
+    RevisarRequest:
+      type: object
+      properties:
+        marcas:
+          type: array
+          items:
+            type: string
+        decision:
+          $ref: '#/components/schemas/DecisionEnum'
+        mensaje:
+          type: string
+          default: ''
+      required:
+      - decision
+      - marcas
+    RevisionTecnica:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemRevisado'
+          readOnly: true
+        decision:
+          allOf:
+          - $ref: '#/components/schemas/DecisionEnum'
+          readOnly: true
+        mensaje:
+          type: string
+          readOnly: true
+        por:
+          type: string
+          readOnly: true
+        creado:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - creado
+      - decision
+      - id
+      - items
+      - mensaje
+      - por
     Rol:
       enum:
       - recepcion

@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from catalogo.models import ItemCatalogo, PasoPlantilla
 from catalogo.semilla import cargar_catalogo
+from conftest import aprobar_revision
 from cuentas.models import Rol
 from directorio.models import Cliente, Profesional
 
@@ -154,7 +155,8 @@ def test_cada_etapa_la_avanza_su_rol(cliente, entrar, laboratorio, crear_persona
     assert 'Revisión técnica' in r.json()['detail']
     cliente.post('/api/auth/salir')
     entrar(crear_persona(laboratorio, 'raul@lab-a.test', [Rol.REVISION]))
-    datos = _avanzar(cliente, caso).json()
+    assert aprobar_revision(cliente, caso['id']).status_code == 201
+    datos = cliente.get(f'/api/casos/{caso["id"]}').json()
     etapa = datos['trabajos'][0]['etapa_actual']
     assert etapa['nombre'] == 'Diseño exocad'
     hechas = [e for e in datos['trabajos'][0]['etapas'] if e['estado'] == 'hecha']
@@ -166,8 +168,9 @@ def test_supervision_completa_todo_y_entrega(cliente, entrar, laboratorio, crear
     cliente.post('/api/auth/salir')
     entrar(crear_persona(laboratorio, 'sole@lab-a.test', [Rol.SUPERVISION]))
     assert cliente.post(f'/api/casos/{caso["id"]}/entregar').status_code == 400  # faltan etapas
-    for _ in range(8):
-        assert _avanzar(cliente, caso).status_code == 200
+    for i in range(8):
+        r = aprobar_revision(cliente, caso['id']) if i == 1 else _avanzar(cliente, caso)
+        assert r.status_code in (200, 201), r.content
     assert _avanzar(cliente, caso).status_code == 400  # ya no quedan etapas
     r = cliente.post(f'/api/casos/{caso["id"]}/entregar')
     assert r.json()['estado'] == 'entregado'

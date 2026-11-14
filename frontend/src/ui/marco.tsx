@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { Activity, Building2, Contact, LayoutGrid, LogOut, Plus, Rows3, UserRound, Users, type LucideIcon } from 'lucide-react'
+import { Activity, Building2, ClipboardCheck, Contact, LayoutGrid, LogOut, Plus, Rows3, UserRound, Users, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router'
 import { api } from '../api/cliente'
@@ -64,6 +64,7 @@ type Enlace = { a: string; texto: string; icono: LucideIcon; permiso?: string; f
 const PRINCIPAL: Enlace[] = [
   { a: '/nuevo', texto: 'Nuevo caso', icono: Plus, permiso: 'crear_caso' },
   { a: '/casos', texto: 'Casos', icono: Rows3 },
+  { a: '/revision', texto: 'Revisión', icono: ClipboardCheck, permiso: 'revisar' },
   { a: '/clientes', texto: 'Clientes', icono: Contact },
   { a: '/catalogo', texto: 'Catálogo', icono: LayoutGrid },
 ]

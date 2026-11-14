@@ -653,16 +653,26 @@ export function VisorReal({
 
   // Otra versión del caso: otro conjunto de capas.
   const claveCapas = capas.map((c) => c.url).join('|')
-  useEffect(() => motor.current?.cargarCapas(capas), [claveCapas]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    motor.current?.cargarCapas(capas)
+  }, [claveCapas]) // eslint-disable-line react-hooks/exhaustive-deps
   // Cambiar de arcada reencuadra; ocultar la prótesis no.
   useEffect(() => {
     motor.current?.aplicarVista()
     motor.current?.encuadrar()
   }, [vista])
-  useEffect(() => motor.current?.aplicarVista(), [ocultar.join('|'), JSON.stringify(estilos)]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => motor.current?.redibujar(), [notas, notaSel])
-  useEffect(() => motor.current?.lupa(lupa), [lupa])
-  useEffect(() => motor.current?.tamano(TAMANOS.find((t) => t.id === tam)?.k ?? 1), [tam])
+  useEffect(() => {
+    motor.current?.aplicarVista()
+  }, [ocultar.join('|'), JSON.stringify(estilos)]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    motor.current?.redibujar()
+  }, [notas, notaSel])
+  useEffect(() => {
+    motor.current?.lupa(lupa)
+  }, [lupa])
+  useEffect(() => {
+    motor.current?.tamano(TAMANOS.find((t) => t.id === tam)?.k ?? 1)
+  }, [tam])
   useEffect(() => {
     const n = notas.find((x) => x.n === notaSel)
     if (n) motor.current?.enfocar(n)
