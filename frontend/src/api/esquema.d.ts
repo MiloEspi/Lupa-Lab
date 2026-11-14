@@ -214,7 +214,7 @@ export interface paths {
          *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
          *     no existe: no se distingue "existe pero no es tuyo".
          */
-        get: operations["casos_list"];
+        get: operations["casos_retrieve"];
         put?: never;
         /**
          * @description Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
@@ -242,7 +242,7 @@ export interface paths {
          *     secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
          *     no existe: no se distingue "existe pero no es tuyo".
          */
-        get: operations["casos_retrieve"];
+        get: operations["casos_retrieve_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -531,6 +531,23 @@ export interface paths {
         };
         /** @description La versión lista para abrir en exocad: las mallas sueltas y las notas en CSV (P8). */
         get: operations["casos_versiones_zip_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/casos/carga": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Cuántos casos abiertos vencen cada día, para sugerir la fecha prometida. */
+        get: operations["casos_carga_list"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1022,6 +1039,8 @@ export interface components {
             readonly sha256: string;
             readonly estado: components["schemas"]["ArchivoEstadoEnum"];
             readonly etapa: string;
+            readonly categoria: string;
+            readonly comentario: string;
             /** Format: uuid */
             readonly version: string | null;
             readonly subido_por: string;
@@ -1065,6 +1084,11 @@ export interface components {
         CancelarRequest: {
             motivo: string;
         };
+        CargaDia: {
+            /** Format: date */
+            fecha: string;
+            casos: number;
+        };
         Caso: {
             /** Format: uuid */
             readonly id: string;
@@ -1084,6 +1108,13 @@ export interface components {
             readonly creado: string;
             readonly version_ficha: number;
             readonly cambio_pendiente: components["schemas"]["CambioPendiente"] | null;
+            readonly orden_origen: components["schemas"]["OrdenOrigenEnum"] | components["schemas"]["BlankEnum"];
+            readonly orden_numero: string;
+            /** Format: date */
+            readonly orden_fecha: string | null;
+            readonly orden_firmada: boolean;
+            readonly llega_impresion: boolean;
+            readonly segundos_carga: number | null;
             readonly trabajos: components["schemas"]["Trabajo"][];
         };
         /**
@@ -1108,6 +1139,25 @@ export interface components {
             /** @default  */
             observaciones: string;
             trabajos: components["schemas"]["TrabajoNuevoRequest"][];
+            /** @default  */
+            orden_origen: components["schemas"]["OrdenOrigenEnum"] | components["schemas"]["BlankEnum"];
+            /** @default  */
+            orden_numero: string;
+            /** Format: date */
+            orden_fecha?: string | null;
+            /** @default false */
+            orden_firmada: boolean;
+            /** @default false */
+            llega_impresion: boolean;
+            segundos_carga?: number | null;
+            /** @default false */
+            pasar_a_revision: boolean;
+        };
+        CasosPaginados: {
+            count: number;
+            next: string | null;
+            previous: string | null;
+            results: components["schemas"]["Caso"][];
         };
         Catalogo: {
             familias: components["schemas"]["Familia"][];
@@ -1288,6 +1338,7 @@ export interface components {
             plantilla_etapas: string;
             /** Format: uuid */
             plantilla_checklist?: string | null;
+            dias_minimos?: number;
             activo?: boolean;
         };
         ItemRequest: {
@@ -1302,12 +1353,14 @@ export interface components {
             plantilla_etapas: string;
             /** Format: uuid */
             plantilla_checklist?: string | null;
+            dias_minimos?: number;
             activo?: boolean;
         };
         Laboratorio: {
             /** Format: uuid */
             readonly id: string;
-            nombre: string;
+            readonly nombre: string;
+            readonly capacidad_diaria: number;
         };
         MembresiaPropia: {
             /** Format: uuid */
@@ -1355,6 +1408,14 @@ export interface components {
             visibilidad?: components["schemas"]["VisibilidadEnum"];
         };
         /**
+         * @description * `` - Sin indicar
+         *     * `papel` - Llegó en papel
+         *     * `caja` - Viene con la caja
+         *     * `digital` - La cargó el odontólogo
+         * @enum {string}
+         */
+        OrdenOrigenEnum: "papel" | "caja" | "digital";
+        /**
          * @description * `inicial` - Escaneo del odontólogo
          *     * `cad` - Diseño (exocad)
          * @enum {string}
@@ -1401,6 +1462,7 @@ export interface components {
             plantilla_etapas?: string;
             /** Format: uuid */
             plantilla_checklist?: string | null;
+            dias_minimos?: number;
             activo?: boolean;
         };
         PatchedMiembroCambioRequest: {
@@ -1441,6 +1503,10 @@ export interface components {
             tipo: components["schemas"]["TipoArchivo"];
             nombre: string;
             tamano: number;
+            /** @default  */
+            categoria: string;
+            /** @default  */
+            comentario: string;
             sha256: string;
         };
         PersonaResumen: {
@@ -1943,13 +2009,14 @@ export interface operations {
             };
         };
     };
-    casos_list: {
+    casos_retrieve: {
         parameters: {
             query?: {
                 cliente?: string;
                 estado?: "abierto" | "cancelado" | "entregado";
                 limit?: number;
                 offset?: number;
+                profesional?: string;
                 /** @description Número, paciente, cliente o profesional */
                 q?: string;
             };
@@ -1964,7 +2031,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Caso"][];
+                    "application/json": components["schemas"]["CasosPaginados"];
                 };
             };
         };
@@ -1994,7 +2061,7 @@ export interface operations {
             };
         };
     };
-    casos_retrieve: {
+    casos_retrieve_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -2375,6 +2442,28 @@ export interface operations {
                 };
                 content: {
                     "application/zip": string;
+                };
+            };
+        };
+    };
+    casos_carga_list: {
+        parameters: {
+            query?: {
+                desde?: string;
+                hasta?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CargaDia"][];
                 };
             };
         };

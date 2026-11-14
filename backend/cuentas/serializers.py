@@ -8,7 +8,8 @@ from .permisos import permisos_de
 class LaboratorioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Laboratorio
-        fields = ['id', 'nombre']
+        fields = ['id', 'nombre', 'capacidad_diaria']
+        read_only_fields = fields
 
 
 class MembresiaPropiaSerializer(serializers.ModelSerializer):

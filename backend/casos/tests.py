@@ -188,3 +188,40 @@ def test_profesional_inactivo_no_recibe_casos_nuevos(cliente, entrar, recepcion,
     Profesional.objects.filter(pk=profesional.pk).update(activo=False)
     entrar(recepcion)
     assert cliente.post('/api/casos', pedido(), format='json').status_code == 400
+
+
+# --- Datos del alta que vienen del prototipo (S9) --------------------------------------------
+
+
+def test_guarda_la_orden_la_impresion_y_el_tiempo_de_carga(crear):
+    caso = crear(
+        orden_origen='papel',
+        orden_numero='OT-2291',
+        orden_fecha='2026-11-02',
+        orden_firmada=True,
+        llega_impresion=True,
+        segundos_carga=74,
+    )
+    assert (caso['orden_origen'], caso['orden_numero'], caso['orden_firmada']) == ('papel', 'OT-2291', True)
+    assert caso['llega_impresion'] is True
+    assert caso['segundos_carga'] == 74
+
+
+def test_carga_por_dia_cuenta_solo_los_abiertos(cliente, crear):
+    a = crear()
+    crear()
+    cliente.post(f'/api/casos/{a["id"]}/cancelar', {'motivo': 'No va'}, format='json')
+    dia = a['fecha_prometida']
+    r = cliente.get(f'/api/casos/carga?desde={dia}&hasta={dia}')
+    assert r.json() == [{'fecha': dia, 'casos': 1}]
+
+
+def test_filtra_por_profesional(cliente, crear, cliente_y_profesional):
+    crear()
+    _, profesional = cliente_y_profesional
+    assert len(cliente.get(f'/api/casos?profesional={profesional.id}').json()['results']) == 1
+
+
+def test_crear_y_pasar_a_revision(crear):
+    caso = crear(pasar_a_revision=True)
+    assert caso['trabajos'][0]['etapa_actual']['nombre'] == 'Revisión técnica'

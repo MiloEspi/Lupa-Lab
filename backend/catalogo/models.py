@@ -88,6 +88,8 @@ class ItemCatalogo(ModeloDeLaboratorio):
         blank=True,
         related_name='items_catalogo',
     )
+    #: Días hábiles que el laboratorio necesita como mínimo: la fecha sugerida sale de acá.
+    dias_minimos = models.PositiveSmallIntegerField(default=3)
     activo = models.BooleanField(default=True)
 
     class Meta:

@@ -277,7 +277,7 @@ paths:
           description: ''
   /api/casos:
     get:
-      operationId: casos_list
+      operationId: casos_retrieve
       description: |-
         Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
         laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
@@ -305,6 +305,10 @@ paths:
         schema:
           type: integer
       - in: query
+        name: profesional
+        schema:
+          type: string
+      - in: query
         name: q
         schema:
           type: string
@@ -318,9 +322,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Caso'
+                $ref: '#/components/schemas/CasosPaginados'
           description: ''
     post:
       operationId: casos_create
@@ -354,7 +356,7 @@ paths:
           description: ''
   /api/casos/{id}:
     get:
-      operationId: casos_retrieve
+      operationId: casos_retrieve_2
       description: |-
         Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
         laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
@@ -889,6 +891,32 @@ paths:
               schema:
                 type: string
                 format: binary
+          description: ''
+  /api/casos/carga:
+    get:
+      operationId: casos_carga_list
+      description: Cuántos casos abiertos vencen cada día, para sugerir la fecha prometida.
+      parameters:
+      - in: query
+        name: desde
+        schema:
+          type: string
+      - in: query
+        name: hasta
+        schema:
+          type: string
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CargaDia'
           description: ''
   /api/catalogo:
     get:
@@ -1802,6 +1830,12 @@ components:
         etapa:
           type: string
           readOnly: true
+        categoria:
+          type: string
+          readOnly: true
+        comentario:
+          type: string
+          readOnly: true
         version:
           type: string
           format: uuid
@@ -1815,6 +1849,8 @@ components:
           format: date-time
           readOnly: true
       required:
+      - categoria
+      - comentario
       - creado
       - estado
       - etapa
@@ -1915,6 +1951,17 @@ components:
           maxLength: 200
       required:
       - motivo
+    CargaDia:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        casos:
+          type: integer
+      required:
+      - casos
+      - fecha
     Caso:
       type: object
       properties:
@@ -1970,6 +2017,29 @@ components:
           - $ref: '#/components/schemas/CambioPendiente'
           nullable: true
           readOnly: true
+        orden_origen:
+          readOnly: true
+          oneOf:
+          - $ref: '#/components/schemas/OrdenOrigenEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        orden_numero:
+          type: string
+          readOnly: true
+        orden_fecha:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+        orden_firmada:
+          type: boolean
+          readOnly: true
+        llega_impresion:
+          type: boolean
+          readOnly: true
+        segundos_carga:
+          type: integer
+          readOnly: true
+          nullable: true
         trabajos:
           type: array
           items:
@@ -1984,11 +2054,17 @@ components:
       - fecha_ingreso
       - fecha_prometida
       - id
+      - llega_impresion
       - motivo_cancelacion
       - numero
       - observaciones
+      - orden_fecha
+      - orden_firmada
+      - orden_numero
+      - orden_origen
       - paciente
       - profesional
+      - segundos_carga
       - trabajos
       - version_ficha
     CasoEstadoEnum:
@@ -2026,10 +2102,56 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TrabajoNuevoRequest'
+        orden_origen:
+          default: ''
+          oneOf:
+          - $ref: '#/components/schemas/OrdenOrigenEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        orden_numero:
+          type: string
+          default: ''
+          maxLength: 30
+        orden_fecha:
+          type: string
+          format: date
+          nullable: true
+        orden_firmada:
+          type: boolean
+          default: false
+        llega_impresion:
+          type: boolean
+          default: false
+        segundos_carga:
+          type: integer
+          minimum: 0
+          nullable: true
+        pasar_a_revision:
+          type: boolean
+          default: false
       required:
       - cliente
       - profesional
       - trabajos
+    CasosPaginados:
+      type: object
+      properties:
+        count:
+          type: integer
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Caso'
+      required:
+      - count
+      - next
+      - previous
+      - results
     Catalogo:
       type: object
       properties:
@@ -2513,6 +2635,10 @@ components:
           type: string
           format: uuid
           nullable: true
+        dias_minimos:
+          type: integer
+          maximum: 32767
+          minimum: 0
         activo:
           type: boolean
       required:
@@ -2555,6 +2681,10 @@ components:
           type: string
           format: uuid
           nullable: true
+        dias_minimos:
+          type: integer
+          maximum: 32767
+          minimum: 0
         activo:
           type: boolean
       required:
@@ -2571,8 +2701,12 @@ components:
           readOnly: true
         nombre:
           type: string
-          maxLength: 120
+          readOnly: true
+        capacidad_diaria:
+          type: integer
+          readOnly: true
       required:
+      - capacidad_diaria
       - id
       - nombre
     MembresiaPropia:
@@ -2703,6 +2837,17 @@ components:
       - x
       - y
       - z
+    OrdenOrigenEnum:
+      enum:
+      - papel
+      - caja
+      - digital
+      type: string
+      description: |-
+        * `` - Sin indicar
+        * `papel` - Llegó en papel
+        * `caja` - Viene con la caja
+        * `digital` - La cargó el odontólogo
     OrigenEnum:
       enum:
       - inicial
@@ -2825,6 +2970,10 @@ components:
           type: string
           format: uuid
           nullable: true
+        dias_minimos:
+          type: integer
+          maximum: 32767
+          minimum: 0
         activo:
           type: boolean
     PatchedMiembroCambioRequest:
@@ -2930,6 +3079,14 @@ components:
           type: integer
           maximum: 314572800
           minimum: 1
+        categoria:
+          type: string
+          default: ''
+          maxLength: 60
+        comentario:
+          type: string
+          default: ''
+          maxLength: 200
         sha256:
           type: string
           minLength: 1

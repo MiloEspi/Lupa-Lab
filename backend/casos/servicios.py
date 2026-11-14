@@ -55,7 +55,7 @@ def _copiar_ruta(trabajo):
 
 
 @transaction.atomic
-def crear_caso(request, *, trabajos, **datos):
+def crear_caso(request, *, trabajos, pasar_a_revision=False, **datos):
     membresia = request.membresia
     exigir(membresia, Accion.CREAR_CASO, 'Tu rol no puede crear casos.')
     caso = Caso.objects.create(
@@ -69,6 +69,12 @@ def crear_caso(request, *, trabajos, **datos):
         _copiar_ruta(trabajo)
     RevisionFicha.objects.create(caso=caso, version=1, trabajos=foto_de_trabajos(caso), creada_por=request.user)
     registrar(request, 'caso_creado', caso, despues={'numero': caso.numero, 'trabajos': len(trabajos)})
+    if pasar_a_revision:
+        # "Crear caso y pasar a revisión": quien lo carga completa la etapa de Recepción.
+        for trabajo in caso.trabajos.all():
+            actual = trabajo.etapa_actual
+            if actual is not None and actual.rol == Rol.RECEPCION and puede_avanzar_etapa(membresia, actual):
+                avanzar(request, trabajo)
     return caso
 
 

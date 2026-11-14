@@ -1,4 +1,4 @@
-from django.db.models import Prefetch, Q
+from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_field
@@ -148,6 +148,12 @@ class CasoSerializer(serializers.ModelSerializer):
             'creado',
             'version_ficha',
             'cambio_pendiente',
+            'orden_origen',
+            'orden_numero',
+            'orden_fecha',
+            'orden_firmada',
+            'llega_impresion',
+            'segundos_carga',
             'trabajos',
         ]
         read_only_fields = fields
@@ -207,6 +213,13 @@ class CasoNuevoSerializer(serializers.Serializer):
     fecha_prometida = serializers.DateField(required=False, allow_null=True, default=None)
     observaciones = serializers.CharField(required=False, allow_blank=True, default='')
     trabajos = TrabajoNuevoSerializer(many=True, allow_empty=False)
+    orden_origen = serializers.ChoiceField(choices=Caso.OrigenOrden.choices, required=False, default='')
+    orden_numero = serializers.CharField(max_length=30, required=False, allow_blank=True, default='')
+    orden_fecha = serializers.DateField(required=False, allow_null=True, default=None)
+    orden_firmada = serializers.BooleanField(required=False, default=False)
+    llega_impresion = serializers.BooleanField(required=False, default=False)
+    segundos_carga = serializers.IntegerField(required=False, allow_null=True, default=None, min_value=0)
+    pasar_a_revision = serializers.BooleanField(required=False, default=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -243,9 +256,17 @@ def _con_todo(queryset):
     )
 
 
+class CasosPaginadosSerializer(serializers.Serializer):
+    count = serializers.IntegerField()
+    next = serializers.CharField(allow_null=True)
+    previous = serializers.CharField(allow_null=True)
+    results = CasoSerializer(many=True)
+
+
 class Paginado(LimitOffsetPagination):
     default_limit = 50
-    max_limit = 200
+    # Los casos abiertos de un laboratorio grande (~350) entran en una sola página.
+    max_limit = 500
 
 
 class CasosView(LaboratorioScopedMixin, APIView):
@@ -254,10 +275,11 @@ class CasosView(LaboratorioScopedMixin, APIView):
             OpenApiParameter('q', str, required=False, description='Número, paciente, cliente o profesional'),
             OpenApiParameter('estado', str, required=False, enum=list(Caso.Estado.values)),
             OpenApiParameter('cliente', str, required=False),
+            OpenApiParameter('profesional', str, required=False),
             OpenApiParameter('limit', int, required=False),
             OpenApiParameter('offset', int, required=False),
         ],
-        responses=CasoSerializer(many=True),
+        responses=CasosPaginadosSerializer,
     )
     def get(self, request):
         casos = self.scoped_queryset(request, Caso)
@@ -266,6 +288,8 @@ class CasosView(LaboratorioScopedMixin, APIView):
             casos = casos.filter(estado=p['estado'])
         if p.get('cliente'):
             casos = casos.filter(cliente_id=p['cliente'])
+        if p.get('profesional'):
+            casos = casos.filter(profesional_id=p['profesional'])
         for palabra in p.get('q', '').split()[:5]:
             condicion = (
                 Q(paciente__icontains=palabra)
@@ -390,3 +414,33 @@ class FichasView(LaboratorioScopedMixin, APIView):
         caso = self.get_scoped_object(request, Caso, pk=pk)
         fichas = caso.fichas.select_related('creada_por').prefetch_related('confirmaciones__membresia__usuario')
         return Response(FichaSerializer(fichas, many=True).data)
+
+
+# --- Carga por día (fecha prometida contra la capacidad) -----------------------------------
+
+
+class CargaDiaSerializer(serializers.Serializer):
+    fecha = serializers.DateField()
+    casos = serializers.IntegerField()
+
+
+class CargaView(LaboratorioScopedMixin, APIView):
+    """Cuántos casos abiertos vencen cada día, para sugerir la fecha prometida."""
+
+    @extend_schema(
+        parameters=[OpenApiParameter('desde', str), OpenApiParameter('hasta', str)],
+        responses=CargaDiaSerializer(many=True),
+    )
+    def get(self, request):
+        desde = serializers.DateField().to_internal_value(request.query_params.get('desde', ''))
+        hasta = serializers.DateField().to_internal_value(request.query_params.get('hasta', ''))
+        if (hasta - desde).days > 62:
+            raise serializers.ValidationError({'hasta': ['Hasta dos meses por pedido.']})
+        filas = (
+            self.scoped_queryset(request, Caso)
+            .filter(estado=Caso.Estado.ABIERTO, fecha_prometida__range=(desde, hasta))
+            .values('fecha_prometida')
+            .annotate(casos=Count('id'))
+            .order_by('fecha_prometida')
+        )
+        return Response([{'fecha': f['fecha_prometida'], 'casos': f['casos']} for f in filas])

@@ -49,6 +49,23 @@ class Caso(ModeloDeLaboratorio):
     creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
     motivo_cancelacion = models.CharField(max_length=200, blank=True)
     version_ficha = models.PositiveIntegerField(default=1)
+
+    class OrigenOrden(models.TextChoices):
+        PENDIENTE = '', 'Sin indicar'
+        PAPEL = 'papel', 'Llegó en papel'
+        CAJA = 'caja', 'Viene con la caja'
+        DIGITAL = 'digital', 'La cargó el odontólogo'
+
+    #: La orden firmada es obligación legal (Decreto 1630/71). En papel la transcribe
+    #: recepción mirando la foto (D20); la foto va como archivo de tipo "orden".
+    orden_origen = models.CharField(max_length=10, choices=OrigenOrden.choices, blank=True, default='')
+    orden_numero = models.CharField(max_length=30, blank=True)
+    orden_fecha = models.DateField(null=True, blank=True)
+    orden_firmada = models.BooleanField(default=False)
+    #: No hay escaneo: llega una impresión física con el cadete.
+    llega_impresion = models.BooleanField(default=False)
+    #: Cuánto tardó recepción en cargarlo: métrica del piloto (P12).
+    segundos_carga = models.PositiveIntegerField(null=True, blank=True)
     #: La última versión que nadie confirmó todavía. Mientras haya una, el caso no avanza
     #: ("cambio sin confirmar" no es un estado: es una marca que frena en cualquier etapa).
     cambio_pendiente = models.ForeignKey(

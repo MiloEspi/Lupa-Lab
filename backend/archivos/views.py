@@ -74,6 +74,8 @@ class ArchivoSerializer(serializers.ModelSerializer):
             'sha256',
             'estado',
             'etapa',
+            'categoria',
+            'comentario',
             'version',
             'subido_por',
             'creado',
@@ -91,6 +93,8 @@ class PedidoSubidaSerializer(serializers.Serializer):
             'max_value': 'El archivo pesa más de 300 MB.',
         },
     )
+    categoria = serializers.CharField(max_length=60, required=False, allow_blank=True, default='')
+    comentario = serializers.CharField(max_length=200, required=False, allow_blank=True, default='')
     sha256 = serializers.RegexField(r'^[0-9a-f]{64}$', error_messages={'invalid': 'Hash SHA-256 inválido.'})
 
     def validate(self, datos):
@@ -180,6 +184,8 @@ class ArchivosView(_DelCaso):
             sha256=d['sha256'],
             subido_por=request.user,
             etapa=_etapa_actual(caso),
+            categoria=d['categoria'],
+            comentario=d['comentario'],
         )
         # La clave no lleva datos del paciente: laboratorio/caso/archivo y el nombre saneado.
         archivo.clave = f'{caso.laboratorio_id}/{caso.pk}/{archivo.pk}/{get_valid_filename(d["nombre"])[:120]}'

@@ -1,10 +1,13 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router'
 import { puede, useYo } from './lib/sesion'
 import { AceptarInvitacion, ElegirLaboratorio, Ingresar, Recuperar, Restablecer } from './pantallas/cuentas'
+import { CasoDetalle } from './pantallas/caso'
+import { Casos } from './pantallas/casos'
 import { CatalogoPantalla } from './pantallas/catalogo'
 import { Directorio } from './pantallas/directorio'
 import { Equipo } from './pantallas/equipo'
-import { Actividad, Inicio, Perfil } from './pantallas/inicio'
+import { Actividad, Perfil } from './pantallas/inicio'
+import { NuevoCaso } from './pantallas/nuevo-caso'
 import { ConSesion } from './ui/con-sesion'
 import { Marco } from './ui/marco'
 
@@ -38,7 +41,12 @@ export function App() {
           </ConSesion>
         }
       >
-        <Route index element={<Inicio />} />
+        <Route index element={<Navigate to="/casos" replace />} />
+        <Route path="casos" element={<Casos />} />
+        <Route path="casos/:id" element={<CasoDetalle />} />
+        <Route element={<ConPermiso accion="crear_caso" />}>
+          <Route path="nuevo" element={<NuevoCaso />} />
+        </Route>
         <Route path="perfil" element={<Perfil />} />
         <Route path="clientes" element={<Directorio />} />
         <Route path="catalogo" element={<CatalogoPantalla />} />

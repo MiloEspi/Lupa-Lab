@@ -45,6 +45,7 @@ class ItemSerializer(SerializerDeLaboratorio):
             'datos_pedidos',
             'plantilla_etapas',
             'plantilla_checklist',
+            'dias_minimos',
             'activo',
         ]
 

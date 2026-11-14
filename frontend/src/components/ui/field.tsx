@@ -1,6 +1,6 @@
 import type { InputHTMLAttributes, ReactNode } from 'react'
 import { useId } from 'react'
-import { cn } from '../lib/utils'
+import { cn } from '../../lib/utils'
 
 type Props = InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: ReactNode; error?: string }
 

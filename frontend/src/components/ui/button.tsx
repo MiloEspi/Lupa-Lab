@@ -1,7 +1,7 @@
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { ButtonHTMLAttributes } from 'react'
-import { cn } from '../lib/utils'
+import { cn } from '../../lib/utils'
 
 // Tamaños táctiles: md 44 px (PC), lg 56 px (producción, con guantes).
 // Todos los botones se elevan al pasar el mouse y se hunden al apretar.

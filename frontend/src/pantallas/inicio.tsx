@@ -3,34 +3,11 @@ import { Laptop, Smartphone } from 'lucide-react'
 import { useState } from 'react'
 import { api, ErrorApi, pedir } from '../api/cliente'
 import { useYo } from '../lib/sesion'
-import { Badge } from '../ui/badge'
-import { Button } from '../ui/button'
-import { Card } from '../ui/card'
-import { Field } from '../ui/field'
+import { Badge } from '../components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card } from '../components/ui/card'
+import { Field } from '../components/ui/field'
 import { Aviso, Titulo } from '../ui/marco'
-
-const nombreRol = (yo: ReturnType<typeof useYo>['data'], rol: string) =>
-  yo?.roles_disponibles.find((r) => r.valor === rol)?.nombre ?? rol
-
-export function Inicio() {
-  const { data: yo } = useYo()
-  const roles = yo?.membresia_activa?.roles ?? []
-  return (
-    <>
-      <Titulo rotulo={yo?.membresia_activa?.laboratorio.nombre}>Hola, {yo?.usuario.nombre || yo?.usuario.email}</Titulo>
-      <Card className="max-w-2xl p-6">
-        <h2 className="m-0 mb-2 text-[18px]">Tus roles</h2>
-        <div className="flex flex-wrap gap-2">
-          {roles.length ? roles.map((r) => <Badge key={r} tone="accion">{nombreRol(yo, r)}</Badge>) : <span className="text-ink3">Todavía no tenés roles asignados.</span>}
-        </div>
-        <p className="mt-5 mb-0 text-ink2">
-          Los casos, la revisión técnica y la producción se suman en las próximas etapas. Por ahora podés manejar tu perfil
-          {yo?.permisos.includes('gestionar_equipo') ? ' y el equipo del laboratorio' : ''}.
-        </p>
-      </Card>
-    </>
-  )
-}
 
 function CambiarPassword() {
   const [actual, setActual] = useState('')

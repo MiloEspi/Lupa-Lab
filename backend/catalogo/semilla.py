@@ -199,6 +199,8 @@ def cargar_catalogo(laboratorio):
         nombre: PlantillaChecklist.objects.create(laboratorio=laboratorio, nombre=nombre, items=items)
         for nombre, items in CHECKLISTS.items()
     }
+    # Plazos del prototipo (borrador): coronas e incrustaciones 3 días, carillas y prótesis 5.
+    dias = {'Carillas': 5, 'Prótesis': 5, 'Placas': 2}
     for orden, (nombre, letra, color, ruta, checklist, datos, items) in enumerate(FAMILIAS):
         familia = Familia.objects.create(laboratorio=laboratorio, nombre=nombre, letra=letra, color=color, orden=orden)
         for item, codigo, materiales in items:
@@ -211,5 +213,6 @@ def cargar_catalogo(laboratorio):
                 datos_pedidos=datos,
                 plantilla_etapas=rutas[ruta],
                 plantilla_checklist=checklists[checklist],
+                dias_minimos=dias.get(nombre, 3),
             )
     return True

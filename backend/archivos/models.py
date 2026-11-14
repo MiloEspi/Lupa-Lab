@@ -61,6 +61,9 @@ class Archivo(ModeloDeLaboratorio):
     clave = models.CharField(max_length=300, unique=True, editable=False)
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.PENDIENTE)
     subido_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='+')
+    #: Qué es: "escaneo 33423" no dice nada; "Escaneo · arcada inferior" sí.
+    categoria = models.CharField(max_length=60, blank=True)
+    comentario = models.CharField(max_length=200, blank=True)
     #: En qué etapa estaba el caso cuando se subió (las fotos de avance van con su etapa).
     etapa = models.CharField(max_length=80, blank=True)
     version = models.ForeignKey(

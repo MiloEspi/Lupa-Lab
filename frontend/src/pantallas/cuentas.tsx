@@ -6,8 +6,8 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-route
 import { api, ErrorApi, pedir } from '../api/cliente'
 import { useGuardarYo, useYo } from '../lib/sesion'
 import { Cargando } from '../ui/con-sesion'
-import { Button } from '../ui/button'
-import { Field } from '../ui/field'
+import { Button } from '../components/ui/button'
+import { Field } from '../components/ui/field'
 import { Aviso, PantallaPublica } from '../ui/marco'
 
 const error = (e: unknown, campo: string) => (e instanceof ErrorApi ? e.campos[campo]?.[0] : undefined)

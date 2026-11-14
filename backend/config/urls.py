@@ -42,6 +42,7 @@ api = [
     path('catalogo/checklists', ct.PlantillasChecklistView.as_view()),
     path('catalogo/checklists/<uuid:pk>', ct.PlantillaChecklistView.as_view()),
     path('casos', cs.CasosView.as_view()),
+    path('casos/carga', cs.CargaView.as_view()),
     path('casos/<uuid:pk>', cs.CasoView.as_view()),
     path('casos/<uuid:pk>/trabajos/<uuid:trabajo>/avanzar', cs.AvanzarView.as_view()),
     path('casos/<uuid:pk>/entregar', cs.EntregarView.as_view()),

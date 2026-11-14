@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { HTMLAttributes } from 'react'
-import { cn } from '../lib/utils'
+import { cn } from '../../lib/utils'
 
 // Un estado nunca va solo con color: siempre punto + texto.
 const badge = cva('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[13px] font-medium', {
