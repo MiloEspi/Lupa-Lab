@@ -30,6 +30,9 @@ npm install
 npm run dev                               # http://localhost:5173, la API va por proxy
 ```
 
+Para tener los casos de demostración con sus escaneos, en vez de `semilla_demo` corré
+`manage.py cargar_demo` sobre la base vacía (ver `backend/demo/LEEME.md`).
+
 Usuarios de prueba: `admin@demo.lupalab.local`, `recepcion@…`, `revision@…`, `cad@…`,
 `produccion@…`, `control@…`, todos con la `SEMILLA_PASSWORD` de tu `.env`. Los mails
 (invitaciones, recuperar contraseña) salen por la consola del backend.
