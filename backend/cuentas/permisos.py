@@ -28,11 +28,13 @@ class Accion(StrEnum):
     REASIGNAR = 'reasignar'
     ENTREGAR = 'entregar'
     CANCELAR_CASO = 'cancelar_caso'
+    PAUSAR_CASO = 'pausar_caso'
     COMENTAR = 'comentar'
     GESTIONAR_EQUIPO = 'gestionar_equipo'
     GESTIONAR_CATALOGO = 'gestionar_catalogo'
     GESTIONAR_CLIENTES = 'gestionar_clientes'
     VER_AUDITORIA = 'ver_auditoria'
+    VER_TABLERO = 'ver_tablero'
 
 
 _REC, _REV, _CAD, _PROD = Rol.RECEPCION, Rol.REVISION, Rol.CAD, Rol.PRODUCCION
@@ -51,11 +53,13 @@ _PERMISOS: dict[Accion, frozenset[str]] = {
     Accion.REASIGNAR: frozenset({_SUP}),
     Accion.ENTREGAR: frozenset({_REC, _SUP}),
     Accion.CANCELAR_CASO: frozenset({_REC, _SUP}),
+    Accion.PAUSAR_CASO: frozenset({_REC, _SUP}),
     Accion.COMENTAR: _TODO_EL_EQUIPO,
     Accion.GESTIONAR_EQUIPO: frozenset({_ADM}),
     Accion.GESTIONAR_CATALOGO: frozenset({_ADM}),
     Accion.GESTIONAR_CLIENTES: frozenset({_ADM, _REC}),
     Accion.VER_AUDITORIA: frozenset({_ADM, _SUP}),
+    Accion.VER_TABLERO: frozenset({_SUP}),
 }
 
 

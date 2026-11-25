@@ -34,6 +34,11 @@ class EnEspera(APIException):
     default_detail = 'El caso está en espera del odontólogo: avanza cuando llegue lo que se pidió.'
 
 
+class CasoPausado(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = 'El caso está pausado: Recepción lo tiene que reanudar para que siga.'
+
+
 def siguiente_numero(laboratorio) -> int:
     contador, _ = ContadorCasos.objects.get_or_create(laboratorio=laboratorio)
     contador = ContadorCasos.objects.select_for_update().get(pk=contador.pk)
@@ -101,6 +106,8 @@ def avanzar(request, trabajo, *, desde_revision=False):
         raise CambioSinConfirmar()
     if caso.en_espera:
         raise EnEspera()
+    if caso.pausado:
+        raise CasoPausado()
     etapas = list(trabajo.etapas.select_for_update())
     actual = next((e for e in etapas if e.estado == EtapaTrabajo.Estado.EN_CURSO), None)
     if actual is None:
@@ -130,6 +137,67 @@ def avanzar(request, trabajo, *, desde_revision=False):
 
 
 @transaction.atomic
+def iniciar_etapa(request, trabajo):
+    """El técnico toca "Iniciar" al empezar a trabajar la etapa (S13). No cambia de etapa:
+    solo deja quién y cuándo, para medir cuánto espera cada trabajo en la fila y cuánto
+    lleva trabajarlo. Mismas reglas que `avanzar`: lo inicia quien tiene el rol de la etapa
+    (o Supervisión) y no con un cambio sin confirmar ni en espera del odontólogo."""
+    caso = Caso.objects.select_for_update().get(pk=trabajo.caso_id)
+    _exigir_abierto(caso)
+    if caso.cambio_pendiente_id:
+        raise CambioSinConfirmar()
+    if caso.en_espera:
+        raise EnEspera()
+    if caso.pausado:
+        raise CasoPausado()
+    actual = next((e for e in trabajo.etapas.select_for_update() if e.estado == EtapaTrabajo.Estado.EN_CURSO), None)
+    if actual is None:
+        raise ValidationError({'detail': 'Este trabajo ya pasó por todas sus etapas.'})
+    if not puede_avanzar_etapa(request.membresia, actual):
+        raise PermissionDenied(f'"{actual.nombre}" la inicia {actual.get_rol_display()}.')
+    if actual.iniciada_en is not None:
+        # No se pisa: si dos personas escanean la misma caja, queda la primera.
+        quien = actual.iniciada_por.usuario.nombre_visible if actual.iniciada_por_id else 'alguien'
+        raise ValidationError({'detail': f'"{actual.nombre}" ya la inició {quien}.'})
+    actual.iniciada_en, actual.iniciada_por = timezone.now(), request.membresia
+    actual.save(update_fields=['iniciada_en', 'iniciada_por'])
+    registrar(request, 'etapa_iniciada', caso, despues={'trabajo': str(trabajo.pk), 'etapa': actual.nombre})
+    return trabajo
+
+
+@transaction.atomic
+def reportar_problema(request, trabajo, texto):
+    """Producción avisa que algo salió mal (fresa rota, pieza astillada, falta material).
+    No frena el caso: queda en la conversación, en la etapa, y como evento para que
+    Supervisión lo vea (el push llega con la S15). Quien decide qué hacer es una persona."""
+    exigir(request.membresia, Accion.AVANZAR_PRODUCCION, 'Los problemas de producción los reporta Producción.')
+    caso = Caso.objects.select_for_update().get(pk=trabajo.caso_id)
+    _exigir_abierto(caso)
+    texto = texto.strip()
+    if not texto:
+        raise ValidationError({'texto': ['Contá qué pasó.']})
+    actual = trabajo.etapa_actual
+    from hilo.models import Mensaje
+
+    Mensaje.objects.create(
+        caso=caso,
+        autor=request.membresia,
+        tipo=Mensaje.Tipo.EQUIPO,
+        texto=texto[:1000],
+        nota='Problema en producción',
+        etapa=actual.nombre if actual else '',
+        etapa_orden=actual.orden - 1 if actual else None,
+    )
+    registrar(
+        request,
+        'problema_reportado',
+        caso,
+        despues={'trabajo': str(trabajo.pk), 'etapa': actual.nombre if actual else None, 'texto': texto[:1000]},
+    )
+    return trabajo
+
+
+@transaction.atomic
 def entregar(request, caso):
     exigir(request.membresia, Accion.ENTREGAR, 'Tu rol no puede entregar casos.')
     caso = Caso.objects.select_for_update().get(pk=caso.pk)
@@ -153,6 +221,43 @@ def cancelar(request, caso, motivo):
     caso.estado, caso.motivo_cancelacion = Caso.Estado.CANCELADO, motivo.strip()[:200]
     caso.save(update_fields=['estado', 'motivo_cancelacion', 'actualizado'])
     registrar(request, 'caso_cancelado', caso, despues={'motivo': caso.motivo_cancelacion})
+    return caso
+
+
+@transaction.atomic
+def pausar(request, caso, motivo):
+    """Frena el caso a mano: nadie avanza ni inicia etapas hasta reanudarlo. Pide el motivo
+    porque queda en la conversación y en la auditoría, y es lo que el equipo lee para saber por qué."""
+    exigir(request.membresia, Accion.PAUSAR_CASO, 'Tu rol no puede pausar casos.')
+    caso = Caso.objects.select_for_update().get(pk=caso.pk)
+    _exigir_abierto(caso)
+    if caso.pausado:
+        raise ValidationError({'detail': 'El caso ya está pausado.'})
+    motivo = motivo.strip()
+    if not motivo:
+        raise ValidationError({'motivo': ['Contá por qué se pausa.']})
+    caso.pausado, caso.pausa_desde, caso.pausa_motivo = True, timezone.now(), motivo[:200]
+    caso.save(update_fields=['pausado', 'pausa_desde', 'pausa_motivo', 'actualizado'])
+    from hilo.servicios import mensaje_de_sistema
+
+    mensaje_de_sistema(caso, f'{request.membresia.usuario.nombre_visible} pausó el caso: {caso.pausa_motivo}.')
+    registrar(request, 'caso_pausado', caso, despues={'motivo': caso.pausa_motivo})
+    return caso
+
+
+@transaction.atomic
+def reanudar(request, caso):
+    exigir(request.membresia, Accion.PAUSAR_CASO, 'Tu rol no puede reanudar casos.')
+    caso = Caso.objects.select_for_update().get(pk=caso.pk)
+    _exigir_abierto(caso)
+    if not caso.pausado:
+        raise ValidationError({'detail': 'El caso no está pausado.'})
+    caso.pausado, caso.pausa_desde, caso.pausa_motivo = False, None, ''
+    caso.save(update_fields=['pausado', 'pausa_desde', 'pausa_motivo', 'actualizado'])
+    from hilo.servicios import mensaje_de_sistema
+
+    mensaje_de_sistema(caso, f'{request.membresia.usuario.nombre_visible} reanudó el caso.')
+    registrar(request, 'caso_reanudado', caso)
     return caso
 
 
@@ -271,7 +376,8 @@ def _volver(caso, trabajo_id, orden):
     for etapa in etapas:
         if etapa.orden >= destino.orden:
             etapa.estado, etapa.inicio, etapa.fin, etapa.hecha_por = EtapaTrabajo.Estado.PENDIENTE, None, None, None
-            etapa.save(update_fields=['estado', 'inicio', 'fin', 'hecha_por'])
+            etapa.iniciada_en, etapa.iniciada_por = None, None
+            etapa.save(update_fields=['estado', 'inicio', 'fin', 'hecha_por', 'iniciada_en', 'iniciada_por'])
     destino.estado, destino.inicio = EtapaTrabajo.Estado.EN_CURSO, timezone.now()
     destino.save(update_fields=['estado', 'inicio'])
     return destino
@@ -312,6 +418,8 @@ def revisar(request, caso, *, marcas, decision, mensaje=''):
     _exigir_abierto(caso)
     if caso.cambio_pendiente_id:
         raise CambioSinConfirmar()
+    if caso.pausado:
+        raise CasoPausado()
     trabajos, items = en_revision(caso)
     if not trabajos:
         raise ValidationError({'detail': 'Este caso no está en revisión técnica.'})

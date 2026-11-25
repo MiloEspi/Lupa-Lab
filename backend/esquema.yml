@@ -703,6 +703,31 @@ paths:
                 items:
                   $ref: '#/components/schemas/Ficha'
           description: ''
+  /api/casos/{id}/mencionables:
+    get:
+      operationId: casos_mencionables_list
+      description: 'A quién se puede etiquetar con "@" en el caso: el equipo activo
+        del laboratorio.'
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Mencionable'
+          description: ''
   /api/casos/{id}/mensajes:
     get:
       operationId: casos_mensajes_list
@@ -766,6 +791,70 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Mensaje'
+          description: ''
+  /api/casos/{id}/pausar:
+    post:
+      operationId: casos_pausar_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PausarRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PausarRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PausarRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+          description: ''
+  /api/casos/{id}/reanudar:
+    post:
+      operationId: casos_reanudar_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
           description: ''
   /api/casos/{id}/revision:
     get:
@@ -883,6 +972,82 @@ paths:
       - cookieAuth: []
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+          description: ''
+  /api/casos/{id}/trabajos/{trabajo}/iniciar:
+    post:
+      operationId: casos_trabajos_iniciar_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: trabajo
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Caso'
+          description: ''
+  /api/casos/{id}/trabajos/{trabajo}/problema:
+    post:
+      operationId: casos_trabajos_problema_create
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: trabajo
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - casos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProblemaRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProblemaRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProblemaRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
           content:
             application/json:
               schema:
@@ -1966,6 +2131,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/Salud'
           description: ''
+  /api/vistas/mis-cajas:
+    get:
+      operationId: vistas_mis_cajas_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      tags:
+      - vistas
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MisCajas'
+          description: ''
+  /api/vistas/tablero:
+    get:
+      operationId: vistas_tablero_retrieve
+      description: |-
+        Para toda vista que toca datos de un laboratorio. Es la única barrera contra que un
+        laboratorio vea lo de otro: una vista que consulte `Modelo.objects.get(pk=...)` a
+        secas reintroduce la fuga. Un objeto de otro laboratorio da 404, igual que uno que
+        no existe: no se distingue "existe pero no es tuyo".
+      parameters:
+      - in: query
+        name: periodo
+        schema:
+          type: string
+          enum:
+          - hoy
+          - mes
+          - semana
+      tags:
+      - vistas
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tablero'
+          description: ''
 components:
   schemas:
     AceptarInvitacionRequest:
@@ -2086,9 +2298,114 @@ components:
       description: |-
         * `pendiente` - Subiendo
         * `listo` - Listo
+    Atrasado:
+      type: object
+      properties:
+        caso:
+          type: string
+          format: uuid
+        codigo:
+          type: string
+        etapa:
+          type: string
+          nullable: true
+        item:
+          type: string
+        pieza:
+          type: string
+        profesional:
+          type: string
+        dias:
+          type: integer
+      required:
+      - caso
+      - codigo
+      - dias
+      - etapa
+      - item
+      - pieza
+      - profesional
+    Atrasados:
+      type: object
+      properties:
+        total:
+          type: integer
+        en_produccion:
+          type: integer
+        en_espera:
+          type: integer
+        pausados:
+          type: integer
+        casos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Atrasado'
+      required:
+      - casos
+      - en_espera
+      - en_produccion
+      - pausados
+      - total
     BlankEnum:
       enum:
       - ''
+    BloqueoEnum:
+      enum:
+      - cambio
+      - pausa
+      - espera
+      type: string
+      description: |-
+        * `cambio` - cambio
+        * `pausa` - pausa
+        * `espera` - espera
+    Caja:
+      type: object
+      properties:
+        caso:
+          type: string
+          format: uuid
+        trabajo:
+          type: string
+          format: uuid
+        codigo:
+          type: string
+        numero:
+          type: integer
+        item:
+          type: string
+        material:
+          type: string
+        pieza:
+          type: string
+        etapa:
+          type: string
+        iniciada:
+          type: boolean
+        fecha_prometida:
+          type: string
+          format: date
+          nullable: true
+        atrasado:
+          type: boolean
+        bloqueo:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/BloqueoEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - atrasado
+      - bloqueo
+      - caso
+      - codigo
+      - etapa
+      - fecha_prometida
+      - iniciada
+      - item
+      - material
+      - numero
+      - pieza
+      - trabajo
     CambiarPasswordRequest:
       type: object
       properties:
@@ -2148,6 +2465,54 @@ components:
       - cambios
       - motivo
       - trabajo
+    CambioSinLeer:
+      type: object
+      properties:
+        caso:
+          type: string
+          format: uuid
+        codigo:
+          type: string
+        etapa:
+          type: string
+          nullable: true
+        item:
+          type: string
+        pieza:
+          type: string
+        profesional:
+          type: string
+        falta:
+          type: array
+          items:
+            $ref: '#/components/schemas/Rol'
+        horas:
+          type: integer
+        cambios:
+          type: array
+          items: {}
+      required:
+      - cambios
+      - caso
+      - codigo
+      - etapa
+      - falta
+      - horas
+      - item
+      - pieza
+      - profesional
+    CambiosSinLeer:
+      type: object
+      properties:
+        total:
+          type: integer
+        casos:
+          type: array
+          items:
+            $ref: '#/components/schemas/CambioSinLeer'
+      required:
+      - casos
+      - total
     CancelarRequest:
       type: object
       properties:
@@ -2231,6 +2596,17 @@ components:
           format: date-time
           readOnly: true
           nullable: true
+        pausado:
+          type: boolean
+          readOnly: true
+        pausa_desde:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        pausa_motivo:
+          type: string
+          readOnly: true
         orden_origen:
           readOnly: true
           oneOf:
@@ -2279,6 +2655,9 @@ components:
       - orden_numero
       - orden_origen
       - paciente
+      - pausa_desde
+      - pausa_motivo
+      - pausado
       - profesional
       - segundos_carga
       - trabajos
@@ -2523,6 +2902,29 @@ components:
           type: string
       required:
       - url
+    Dia:
+      type: object
+      properties:
+        fecha:
+          type: string
+          format: date
+        trabajos:
+          type: integer
+        entregados:
+          type: integer
+        hoy:
+          type: boolean
+        futuro:
+          type: boolean
+        habil:
+          type: boolean
+      required:
+      - entregados
+      - fecha
+      - futuro
+      - habil
+      - hoy
+      - trabajos
     Diferencia:
       type: object
       properties:
@@ -2546,6 +2948,26 @@ components:
           format: uuid
       required:
       - laboratorio
+    Entregas:
+      type: object
+      properties:
+        prometidos:
+          type: integer
+        entregados:
+          type: integer
+      required:
+      - entregados
+      - prometidos
+    EntregasATiempo:
+      type: object
+      properties:
+        a_tiempo:
+          type: integer
+        entregados:
+          type: integer
+      required:
+      - a_tiempo
+      - entregados
     EstadoRevision:
       type: object
       properties:
@@ -2608,11 +3030,20 @@ components:
         hecha_por:
           type: string
           readOnly: true
+        iniciada:
+          type: string
+          format: date-time
+          readOnly: true
+        iniciada_por:
+          type: string
+          readOnly: true
       required:
       - en_consultorio
       - estado
       - fin
       - hecha_por
+      - iniciada
+      - iniciada_por
       - inicio
       - nombre
       - orden
@@ -2633,6 +3064,24 @@ components:
       - orden
       - rol
       - total
+    EtapaDelTablero:
+      type: object
+      properties:
+        nombre:
+          type: string
+        casos:
+          type: integer
+        horas:
+          type: number
+          format: double
+          nullable: true
+        espera:
+          type: boolean
+      required:
+      - casos
+      - espera
+      - horas
+      - nombre
     EtapaEstadoEnum:
       enum:
       - pendiente
@@ -3007,6 +3456,34 @@ components:
       - laboratorio
       - roles
       - tipo
+    Mencion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - nombre
+    Mencionable:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+          readOnly: true
+        rol:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - nombre
+      - rol
     Mensaje:
       type: object
       properties:
@@ -3046,6 +3523,11 @@ components:
           items:
             $ref: '#/components/schemas/Adjunto'
           readOnly: true
+        menciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mencion'
+          readOnly: true
         creado:
           type: string
           format: date-time
@@ -3062,6 +3544,7 @@ components:
       - etapa
       - etapa_orden
       - id
+      - menciones
       - nota
       - respuestas
       - rol
@@ -3095,6 +3578,12 @@ components:
           items:
             type: string
             format: uuid
+        menciones:
+          type: array
+          items:
+            type: string
+            format: uuid
+          maxItems: 20
     MensajeNuevoTipoEnum:
       enum:
       - equipo
@@ -3133,6 +3622,15 @@ components:
       - id
       - tipo
       - usuario
+    MisCajas:
+      type: object
+      properties:
+        cajas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Caja'
+      required:
+      - cajas
     Nota:
       type: object
       properties:
@@ -3210,6 +3708,9 @@ components:
       - x
       - y
       - z
+    NullEnum:
+      enum:
+      - null
     OrdenOrigenEnum:
       enum:
       - papel
@@ -3229,6 +3730,44 @@ components:
       description: |-
         * `inicial` - Escaneo del odontólogo
         * `cad` - Diseño (exocad)
+    ParaAtender:
+      type: object
+      properties:
+        tipo:
+          $ref: '#/components/schemas/ParaAtenderTipoEnum'
+        motivos:
+          type: array
+          items:
+            type: string
+        caso:
+          type: string
+          format: uuid
+        codigo:
+          type: string
+        detalle:
+          type: string
+        dias:
+          type: integer
+        horas:
+          type: integer
+      required:
+      - caso
+      - codigo
+      - detalle
+      - motivos
+      - tipo
+    ParaAtenderTipoEnum:
+      enum:
+      - atrasado
+      - sin_leer
+      - espera
+      - problema
+      type: string
+      description: |-
+        * `atrasado` - atrasado
+        * `sin_leer` - sin_leer
+        * `espera` - espera
+        * `problema` - problema
     Paso:
       type: object
       properties:
@@ -3440,6 +3979,14 @@ components:
           type: string
         activo:
           type: boolean
+    PausarRequest:
+      type: object
+      properties:
+        motivo:
+          type: string
+          maxLength: 200
+      required:
+      - motivo
     PedidoSubidaRequest:
       type: object
       properties:
@@ -3470,6 +4017,31 @@ components:
       - sha256
       - tamano
       - tipo
+    PeriodoEnum:
+      enum:
+      - hoy
+      - semana
+      - mes
+      type: string
+      description: |-
+        * `hoy` - hoy
+        * `semana` - semana
+        * `mes` - mes
+    PersonaDelTablero:
+      type: object
+      properties:
+        nombre:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        en_mano:
+          type: integer
+      required:
+      - en_mano
+      - nombre
+      - roles
     PersonaResumen:
       type: object
       properties:
@@ -3481,6 +4053,24 @@ components:
       required:
       - id
       - nombre
+    Piloto:
+      type: object
+      properties:
+        casos:
+          type: integer
+        segundos_carga:
+          type: integer
+          nullable: true
+        cambios_perdidos:
+          type: integer
+          nullable: true
+        entregas_a_tiempo:
+          $ref: '#/components/schemas/EntregasATiempo'
+      required:
+      - cambios_perdidos
+      - casos
+      - entregas_a_tiempo
+      - segundos_carga
     PlantillaChecklist:
       type: object
       properties:
@@ -3548,6 +4138,14 @@ components:
       required:
       - nombre
       - pasos
+    ProblemaRequest:
+      type: object
+      properties:
+        texto:
+          type: string
+          maxLength: 1000
+      required:
+      - texto
     Profesional:
       type: object
       properties:
@@ -3689,6 +4287,11 @@ components:
           items:
             $ref: '#/components/schemas/Adjunto'
           readOnly: true
+        menciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Mencion'
+          readOnly: true
         creado:
           type: string
           format: date-time
@@ -3700,6 +4303,7 @@ components:
       - etapa
       - etapa_orden
       - id
+      - menciones
       - nota
       - rol
       - texto
@@ -3788,6 +4392,25 @@ components:
         * `control` - Control
         * `supervision` - Supervisión
         * `administracion` - Administración
+    RolDelTablero:
+      type: object
+      properties:
+        rol:
+          type: string
+        nombre:
+          type: string
+        personas:
+          type: integer
+        en_fila:
+          type: integer
+        en_mano:
+          type: integer
+      required:
+      - en_fila
+      - en_mano
+      - nombre
+      - personas
+      - rol
     RolDisponible:
       type: object
       properties:
@@ -3862,6 +4485,60 @@ components:
       - encabezados
       - metodo
       - url
+    Tablero:
+      type: object
+      properties:
+        periodo:
+          $ref: '#/components/schemas/PeriodoEnum'
+        hoy:
+          type: string
+          format: date
+        capacidad:
+          type: integer
+        en_curso:
+          type: integer
+        entregas:
+          $ref: '#/components/schemas/Entregas'
+        atrasados:
+          $ref: '#/components/schemas/Atrasados'
+        cambios_sin_leer:
+          $ref: '#/components/schemas/CambiosSinLeer'
+        dias:
+          type: array
+          items:
+            $ref: '#/components/schemas/Dia'
+        etapas:
+          type: array
+          items:
+            $ref: '#/components/schemas/EtapaDelTablero'
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RolDelTablero'
+        gente:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonaDelTablero'
+        para_atender:
+          type: array
+          items:
+            $ref: '#/components/schemas/ParaAtender'
+        piloto:
+          $ref: '#/components/schemas/Piloto'
+      required:
+      - atrasados
+      - cambios_sin_leer
+      - capacidad
+      - dias
+      - en_curso
+      - entregas
+      - etapas
+      - gente
+      - hoy
+      - para_atender
+      - periodo
+      - piloto
+      - roles
     TipoArchivo:
       enum:
       - escaneo

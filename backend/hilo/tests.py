@@ -66,3 +66,31 @@ def test_otro_laboratorio_no_ve_la_conversacion(cliente, caso, otro_laboratorio,
     ajeno = APIClient()
     ajeno.post('/api/auth/ingresar', {'email': 'otra@lab-b.test', 'password': PASSWORD}, format='json')
     assert ajeno.get(_url(caso)).status_code == 404
+
+
+def test_etiqueta_a_gente_del_equipo(cliente, caso, laboratorio, crear_persona):
+    sup = crear_persona(laboratorio, 'sofi@lab-a.test', [Rol.SUPERVISION])
+    r = cliente.post(_url(caso), {'texto': '@sofi mirá esto', 'menciones': [str(sup.id)]}, format='json')
+    assert r.status_code == 201, r.content
+    assert [m['id'] for m in r.json()['menciones']] == [str(sup.id)]
+    hilo = cliente.get(_url(caso)).json()
+    assert [m['nombre'] for m in hilo[0]['menciones']] == ['sofi@lab-a.test']
+
+
+def test_no_se_etiqueta_a_otro_laboratorio_ni_a_una_baja(cliente, caso, laboratorio, otro_laboratorio, crear_persona):
+    ajena = crear_persona(otro_laboratorio, 'ana@lab-b.test', [Rol.RECEPCION])
+    baja = crear_persona(laboratorio, 'beto@lab-a.test', [Rol.CAD], activa=False)
+    for quien in (ajena, baja):
+        r = cliente.post(_url(caso), {'texto': 'hola', 'menciones': [str(quien.id)]}, format='json')
+        assert r.status_code == 400, r.content
+
+
+def test_mencionables_lista_solo_al_equipo_activo_de_este_laboratorio(cliente, caso, laboratorio, otro_laboratorio, crear_persona):
+    crear_persona(laboratorio, 'cami@lab-a.test', [Rol.CAD])
+    crear_persona(laboratorio, 'beto@lab-a.test', [Rol.CAD], activa=False)
+    crear_persona(otro_laboratorio, 'ana@lab-b.test', [Rol.RECEPCION])
+    r = cliente.get(f'/api/casos/{caso["id"]}/mencionables')
+    assert r.status_code == 200, r.content
+    nombres = {m['nombre'] for m in r.json()}
+    assert nombres == {'rita@lab-a.test', 'cami@lab-a.test'}
+    assert all(m['rol'] for m in r.json())

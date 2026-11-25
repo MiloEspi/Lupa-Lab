@@ -221,6 +221,8 @@ export function VisorReal({
           })
           .then((buf) => {
             const geo = parsear(buf, def.ext ?? extDe(def.url))
+            // Un archivo vacío (0 vértices) no es un error de red pero tampoco se puede ver: se avisa en vez de dejar el visor en blanco.
+            if (!geo.attributes.position || geo.attributes.position.count === 0) throw new Error(`${def.nombre} no tiene geometría: el archivo está vacío o está dañado. Volvé a exportarlo.`)
             if (!geo.attributes.normal) geo.computeVertexNormals()
             return geo
           })
@@ -373,6 +375,13 @@ export function VisorReal({
         })
         .catch((e: Error) => {
           if (!vivo || mia !== ficha) return
+          // Que no quede dibujada la versión anterior detrás del aviso: parecería que el archivo nuevo es ese.
+          actuales.forEach((c) => {
+            modelo.remove(c.mesh)
+            ;(c.mesh.material as THREE.Material).dispose()
+          })
+          actuales = []
+          sucio = true
           setError(e.message)
           setCargando(false)
         })

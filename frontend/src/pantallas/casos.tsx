@@ -83,7 +83,7 @@ function TarjetaCaso({ c, i }: { c: Caso; i: number }) {
         </span>
       </span>
 
-      <ProgresoEtapas etapas={nombresEtapas(t)} etapa={indiceEtapa(t)} frenado={!!c.cambio_pendiente} />
+      <ProgresoEtapas etapas={nombresEtapas(t)} etapa={indiceEtapa(t)} frenado={!!c.cambio_pendiente || c.pausado} />
 
       <span className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-ln pt-2.5 text-[13.5px]">
         <Estado c={c} />
@@ -112,7 +112,7 @@ function FilaCaso({ c }: { c: Caso }) {
           {c.profesional.nombre} · {c.cliente.nombre}
         </span>
       </span>
-      <ProgresoEtapas etapas={nombresEtapas(t)} etapa={indiceEtapa(t)} frenado={!!c.cambio_pendiente} />
+      <ProgresoEtapas etapas={nombresEtapas(t)} etapa={indiceEtapa(t)} frenado={!!c.cambio_pendiente || c.pausado} />
       <span className="grid gap-0.5 text-[13.5px]">
         <Estado c={c} />
         <span className="text-ink2">Entrega {fechaCorta(c.fecha_prometida)}</span>

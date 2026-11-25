@@ -19,7 +19,7 @@ def _foto(objeto, campos):
     datos = model_to_dict(objeto, fields=campos)
     return {
         k: (
-            [str(x.pk) for x in v]
+            [str(getattr(x, 'pk', x)) for x in v]  # relaciones muchos a muchos (con pk) o listas de textos
             if isinstance(v, list)
             else (str(v) if v is not None and not isinstance(v, (int, bool, str, float)) else v)
         )

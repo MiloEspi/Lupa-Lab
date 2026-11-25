@@ -1,0 +1,16 @@
+{
+  "name": "Lupa Lab",
+  "short_name": "Lupa Lab",
+  "description": "Pedidos y producción del laboratorio",
+  "lang": "es-AR",
+  "start_url": "/p",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F3F2EE",
+  "theme_color": "#F3F2EE",
+  "icons": [
+    { "src": "/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

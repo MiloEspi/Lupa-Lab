@@ -32,6 +32,9 @@ class Mensaje(ModeloBase):
     etapa_orden = models.PositiveSmallIntegerField(null=True, blank=True)
     respuesta_a = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='respuestas')
     adjuntos = models.ManyToManyField('archivos.Archivo', blank=True, related_name='mensajes')
+    #: Gente del equipo etiquetada con "@". Es una marca visible en el hilo (y para filtrar "me
+    #: mencionaron"); no cambia quién puede leer el mensaje: todo el equipo ve todo el caso.
+    menciones = models.ManyToManyField('cuentas.Membresia', blank=True, related_name='+')
 
     class Meta:
         ordering = ['creado']

@@ -5,19 +5,20 @@
  * profesionales, catálogo, carga de cada día y subida de archivos.
  */
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowRight, CalendarClock, Camera, Check, Clipboard, FileBox, FileText, Image as ImageIcon, Info, Layers, Link2, Palette, PenLine, Repeat2, Search, ShieldCheck, Sparkles, Stethoscope, Upload, X } from 'lucide-react'
+import { ArrowRight, Building2, Camera, Check, Clipboard, FileBox, FileText, Image as ImageIcon, Info, Layers, Link2, PenLine, Repeat2, Search, ShieldCheck, Sparkles, Stethoscope, Upload, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { api, pedir, type Esquemas } from '../api/cliente'
+import { CabeceraNuevoCaso, type PasoCarga } from '../components/CabeceraNuevoCaso'
 import { LenteImagen } from '../components/LenteImagen'
 import { Avatar } from '../components/ui/avatar-foto'
 import { Button } from '../components/ui/button'
 import { Card, type TonoCard } from '../components/ui/card'
-import { BarraFlotante, Codigo, CodigoGrande, Rotulo } from '../components/ui/flotante'
 import { MiniOdontograma } from '../components/ui/mini-odontograma'
 import { Segmented } from '../components/ui/segmented'
 import { SelectorPiezas } from '../components/ui/selector-piezas'
-import { leerPedido, VITA } from '../lib/leerPedido'
+import { coloresDeFamilia } from '../lib/casos'
+import { indicacionesDelMensaje, leerPedido, VITA } from '../lib/leerPedido'
 import { useYo } from '../lib/sesion'
 import { subirArchivo, type TipoArchivo } from '../lib/subir'
 import { cn } from '../lib/utils'
@@ -86,7 +87,7 @@ function piezasLupa(piezas: string[], familia: string, soporte: 'munon' | 'impla
 /** Lo que leerPedido reconoce como trabajo, llevado a la familia del catálogo. */
 const FAMILIA_DE_TRABAJO: Record<string, string> = { corona: 'Coronas', carilla: 'Carillas', incrustacion: 'Incrustaciones', placa: 'Placas', puente: 'Prótesis' }
 
-type Campo = 'odontologo' | 'paciente' | 'trabajo' | 'material' | 'soporte' | 'implante' | 'piezas' | 'color' | 'fecha'
+type Campo = 'odontologo' | 'paciente' | 'trabajo' | 'material' | 'soporte' | 'implante' | 'piezas' | 'color' | 'fecha' | 'indicaciones'
 
 const VACIO = {
   profesional: null as string | null,
@@ -112,26 +113,51 @@ const VACIO = {
 }
 type Pedido = typeof VACIO
 
-function Seccion({ id, n, titulo, ayuda, listo, delMensaje, tono = 'base', orden = 0, children }: { id: string; n: string; titulo: string; ayuda?: string; listo?: boolean; delMensaje?: boolean; tono?: TonoCard; orden?: number; children: ReactNode }) {
+/**
+ * Una sección del formulario, con el lenguaje del tablero «Proceso del caso»: tarjeta con el velo del color
+ * del tipo y, a la izquierda, el círculo del paso (verde con tilde si está listo, azul con aro si es el que
+ * toca, gris con borde si falta). Sin `n` (el pegado del mensaje, que es opcional) lleva un ícono.
+ */
+function Seccion({ id, n, icono: Icono, titulo, ayuda, listo, actual, delMensaje, tono = 'base', orden = 0, children }: { id: string; n?: number; icono?: typeof Check; titulo: string; ayuda?: string; listo?: boolean; actual?: boolean; delMensaje?: boolean; tono?: TonoCard; orden?: number; children: ReactNode }) {
   return (
-    <Card tono={listo ? 'base' : tono} className="entra grid scroll-mt-28 gap-4 p-5 sm:p-6" style={{ '--d': orden } as CSSProperties} id={id} role="region" aria-labelledby={`${id}-t`}>
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="grid gap-1.5">
-          <Rotulo n={n}>{titulo}</Rotulo>
-          {ayuda && <span id={`${id}-t`} className="text-[15.5px] text-ink2">{ayuda}</span>}
+    <Card tono={listo ? 'base' : tono} className={cn('proceso-caso entra grid scroll-mt-4 gap-4 p-5 transition-shadow duration-300 sm:p-6', actual && !listo && 'shadow-[0_0_0_2px_color-mix(in_srgb,var(--ac)_55%,transparent),var(--shadow-ficha)]')} style={{ '--d': orden } as CSSProperties} id={id} role="region" aria-labelledby={`${id}-t`}>
+      <div className="flex flex-wrap items-start gap-x-3.5 gap-y-2">
+        <span
+          aria-hidden
+          className={cn(
+            'mt-0.5 grid size-9 shrink-0 place-items-center rounded-full font-mono text-[14px] font-semibold transition duration-300',
+            listo
+              ? 'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--ok)_80%,white),var(--ok))] text-white shadow-[0_0_0_4px_color-mix(in_srgb,var(--ok)_14%,transparent)]'
+              : actual
+                ? 'bg-[linear-gradient(180deg,color-mix(in_srgb,var(--ac)_84%,white),var(--ac))] text-acI shadow-[0_0_0_4px_color-mix(in_srgb,var(--ac)_20%,transparent)]'
+                : 'border border-ctl bg-sf/80 text-ink2',
+          )}
+        >
+          {listo ? <Check className="size-[18px]" strokeWidth={3} /> : Icono ? <Icono className="size-[18px]" /> : n}
+        </span>
+        <div className="grid min-w-0 flex-1 gap-1">
+          <h2 id={`${id}-t`} className="display m-0 text-[22px] leading-tight font-bold tracking-tight">{titulo}</h2>
+          {ayuda && <p className="m-0 max-w-[68ch] text-[15px] leading-snug text-ink2">{ayuda}</p>}
         </div>
         <span className="flex items-center gap-2">
           {delMensaje && <span className="rounded-full bg-waS px-2.5 py-0.5 font-mono text-[11px] font-semibold tracking-[0.06em] text-wa uppercase shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--wa)_30%,transparent)]">Del mensaje · revisá</span>}
-          {listo && (
-            <span className="flex items-center gap-1 rounded-full bg-okS px-2.5 py-0.5 text-[13px] font-semibold text-ok">
-              <Check aria-hidden className="size-4" strokeWidth={3} />
-              Listo
-            </span>
-          )}
+          {listo && <span className="rounded-full bg-okS px-2.5 py-0.5 font-mono text-[11px] font-semibold tracking-[0.1em] text-ok uppercase">Hecho</span>}
+          {actual && !listo && <span className="rounded-full bg-acS px-2.5 py-0.5 font-mono text-[11px] font-semibold tracking-[0.1em] text-acT uppercase">Ahora</span>}
         </span>
       </div>
       {children}
     </Card>
+  )
+}
+
+/** Rótulo chico en monoespaciada, el de «Pide», «Paga» y «Paciente» de la cabecera: ordena los grupos de un campo. */
+function Etiqueta({ children, htmlFor, aparte, className }: { children: ReactNode; htmlFor?: string; aparte?: string; className?: string }) {
+  const C = htmlFor ? 'label' : 'span'
+  return (
+    <C htmlFor={htmlFor} className={cn('font-mono text-[11.5px] font-medium tracking-[0.1em] text-ink2 uppercase', className)}>
+      {children}
+      {aparte && <span className="ml-1.5 font-sans text-[12.5px] font-normal tracking-normal text-ink3 normal-case">{aparte}</span>}
+    </C>
   )
 }
 
@@ -171,6 +197,10 @@ export function NuevoCaso() {
   const [mensaje, setMensaje] = useState('')
   const [dudas, setDudas] = useState<string[]>([])
   const [busca, setBusca] = useState('')
+  // El buscador consulta al servidor (no solo la lista ya cargada): así aparece cualquier cliente u odontólogo real del laboratorio.
+  const [q, setQ] = useState('')
+  const [clienteBusca, setClienteBusca] = useState<Esquemas['Cliente'] | null>(null)
+  const [elegido, setElegido] = useState<Profesional | null>(null)
   const [creado, setCreado] = useState<Creado | null>(null)
   const [paso, setPaso] = useState('')
   const [segundos, setSegundos] = useState(0)
@@ -178,7 +208,27 @@ export function NuevoCaso() {
   const habiles = useMemo(() => proximosHabiles(10), [])
   const fotoOrden = useMemo(() => (p.ordenFoto ? URL.createObjectURL(p.ordenFoto) : null), [p.ordenFoto])
 
-  const profesionales = useQuery({ queryKey: ['profesionales', { activos: true }], queryFn: () => pedir(api.GET('/api/profesionales')) })
+  const profesionales = useQuery({ queryKey: ['profesionales', { activos: true }], queryFn: () => pedir(api.GET('/api/profesionales', { params: { query: { activos: true } } })) })
+  useEffect(() => {
+    const t = setTimeout(() => setQ(busca.trim()), 250)
+    return () => clearTimeout(t)
+  }, [busca])
+  const hayBusqueda = q.length > 0
+  const profBuscados = useQuery({
+    queryKey: ['profesionales', { q, activos: true }],
+    queryFn: () => pedir(api.GET('/api/profesionales', { params: { query: { q, activos: true } } })),
+    enabled: hayBusqueda,
+  })
+  const clientesBuscados = useQuery({
+    queryKey: ['clientes', { q, activos: true }],
+    queryFn: () => pedir(api.GET('/api/clientes', { params: { query: { q, activos: true } } })),
+    enabled: hayBusqueda,
+  })
+  const profDelCliente = useQuery({
+    queryKey: ['profesionales', { cliente: clienteBusca?.id, activos: true }],
+    queryFn: () => pedir(api.GET('/api/profesionales', { params: { query: { cliente: clienteBusca!.id, activos: true } } })),
+    enabled: !!clienteBusca,
+  })
   const catalogo = useQuery({ queryKey: ['catalogo'], queryFn: () => pedir(api.GET('/api/catalogo')) })
   const carga = useQuery({
     queryKey: ['carga', habiles[0].clave],
@@ -217,7 +267,9 @@ export function NuevoCaso() {
   const cargaDe = (d: Dia) => cargas.get(d.clave) ?? 0
   const fechaSel = habiles.find((d) => d.clave === p.fecha)
 
-  const od = profesionales.data?.find((o) => o.id === p.profesional)
+  // Todo el formulario se repinta con el color de la familia elegida, como el caso ya creado.
+  const colores = coloresDeFamilia(familia?.color || undefined) as CSSProperties | undefined
+  const od = profesionales.data?.find((o) => o.id === p.profesional) ?? (elegido?.id === p.profesional ? elegido : undefined)
   const paga = od?.clientes_detalle.find((c) => c.id === p.cliente)
   const escaneos = p.archivos.filter((a) => a.tipo === 'escaneo')
   const sinCategoria = p.archivos.filter((a) => !a.categoria).length
@@ -242,7 +294,11 @@ export function NuevoCaso() {
   const elegirProfesional = (o: Profesional) => {
     setP((x) => ({ ...x, profesional: o.id, cliente: o.clientes_detalle.length === 1 ? o.clientes_detalle[0].id : null }))
     setDelMensaje((s) => new Set([...s].filter((c) => c !== 'odontologo')))
+    // Se guarda el objeto: si vino de la búsqueda puede no estar en la lista cargada.
+    setElegido(o)
     setBusca('')
+    setQ('')
+    setClienteBusca(null)
   }
 
   const elegirFamilia = (id: string) => {
@@ -270,8 +326,12 @@ export function NuevoCaso() {
     const lista = (profesionales.data ?? []).map((o) => ({ id: o.id, claves: [o.apellido, `${o.nombre} ${o.apellido}`].filter(Boolean).flatMap((c) => [c.toLowerCase(), sinTildes(c)]) }))
     const l = leerPedido(texto, lista)
     const marcados = new Set<Campo>()
-    // Un mensaje nuevo es un pedido nuevo: se parte de cero y solo se conservan archivos, orden y notas.
-    const nuevo: Pedido = { ...VACIO, archivos: p.archivos, orden: p.orden, numeroOrden: p.numeroOrden, fechaOrden: p.fechaOrden, ordenFirma: p.ordenFirma, ordenFoto: p.ordenFoto, notas: p.notas }
+    // Un mensaje nuevo es un pedido nuevo: se parte de cero y solo se conservan archivos, orden y lo que quien carga escribió en las
+    // indicaciones. Si las indicaciones eran las de un mensaje anterior (las puso el sistema), se reemplazan por las de este.
+    const escritasAMano = p.notas.trim() !== '' && !delMensaje.has('indicaciones')
+    const indicaciones = escritasAMano ? '' : indicacionesDelMensaje(texto)
+    const nuevo: Pedido = { ...VACIO, archivos: p.archivos, orden: p.orden, numeroOrden: p.numeroOrden, fechaOrden: p.fechaOrden, ordenFirma: p.ordenFirma, ordenFoto: p.ordenFoto, notas: escritasAMano ? p.notas : indicaciones }
+    if (indicaciones) marcados.add('indicaciones')
     const o = profesionales.data?.find((x) => x.id === l.odontologo)
     if (o) {
       nuevo.profesional = o.id
@@ -349,11 +409,11 @@ export function NuevoCaso() {
     set('piezas', ya ? p.piezas.filter((x) => x !== n) : multiple ? [...p.piezas, n] : [n], 'piezas')
   }
 
-  const filtrados = useMemo(() => {
-    const q = sinTildes(busca.trim())
-    const todos = profesionales.data ?? []
-    return q ? todos.filter((o) => sinTildes(`${o.nombre_completo} ${o.clientes_detalle.map((c) => c.razon_social).join(' ')}`).includes(q)) : todos.slice(0, 12)
-  }, [busca, profesionales.data])
+  // Sin texto: los primeros de la lista. Con texto: lo que encuentra el servidor (nombre, matrícula, mail) y, aparte, los clientes
+  // reales que coinciden; tocar un cliente muestra sus odontólogos.
+  const filtrados = clienteBusca ? (profDelCliente.data ?? []) : hayBusqueda ? (profBuscados.data ?? []) : (profesionales.data ?? []).slice(0, 12)
+  const clientesEncontrados = hayBusqueda && !clienteBusca ? (clientesBuscados.data ?? []) : []
+  const buscando = clienteBusca ? profDelCliente.isFetching : hayBusqueda && (profBuscados.isFetching || clientesBuscados.isFetching || busca.trim() !== q)
 
   const reloj = `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`
   const ir = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -395,6 +455,22 @@ export function NuevoCaso() {
       )
       // Los archivos se suben después de crear el caso: si uno falla, el caso ya existe y se reintenta desde ahí.
       const fallidos: string[] = []
+      // El mensaje pegado se guarda tal cual llegó, como primer mensaje del caso (en Recepción): es lo que dijo el odontólogo,
+      // con lo que no entra en la ficha (la encía, los dientes vecinos, cómo lo quiere). WhatsApp no es la fuente de verdad: esto
+      // queda como registro de lo que llegó, la ficha son los datos de arriba.
+      if (mensaje.trim()) {
+        setPaso('Guardando el mensaje del odontólogo…')
+        try {
+          await pedir(
+            api.POST('/api/casos/{id}/mensajes', {
+              params: { path: { id: caso.id } },
+              body: { texto: mensaje.trim(), tipo: 'odontologo', nota: `Pedido pegado por ${yo?.usuario.nombre_visible ?? 'recepción'}`.slice(0, 120), respuesta_a: null, etapa_orden: 0, adjuntos: [] },
+            }),
+          )
+        } catch {
+          fallidos.push('el mensaje del odontólogo')
+        }
+      }
       const escaneosSubidos: string[] = []
       const todos = [...p.archivos, ...(p.ordenFoto ? [{ archivo: p.ordenFoto, tipo: 'orden' as TipoArchivo, categoria: 'Orden en papel', comentario: p.numeroOrden }] : [])]
       for (const [i, a] of todos.entries()) {
@@ -451,21 +527,30 @@ export function NuevoCaso() {
     const [letra, numero] = creado.caso.codigo.split('-')
     const etapa = creado.caso.trabajos[0]?.etapa_actual?.nombre ?? 'Recepción'
     return (
-      <Card tono="menta" className="entra mx-auto mt-6 grid w-full max-w-[680px] gap-5 p-7">
-        <Rotulo>Caso creado</Rotulo>
+      <section aria-label="Caso creado" style={{ ...colores, '--estado': '#6FD3A0', '--verde': '40%' } as CSSProperties} className="vidrio-caso entra mx-auto mt-6 grid w-full max-w-[720px] gap-5 p-6 sm:p-7">
+        <div aria-hidden className="fondo-caso">
+          <i className="fc-tipo" />
+          <i className="fc-medio" />
+          <i className="fc-avance" />
+          <i className="fc-grano" />
+        </div>
+        <span className="flex w-fit items-center gap-1.5 rounded-full bg-okS px-3 py-1 font-mono text-[11px] font-semibold tracking-[0.12em] text-ok uppercase">
+          <Check aria-hidden className="size-3.5" strokeWidth={3} />
+          Caso creado
+        </span>
         <div className="grid gap-2">
-          <CodigoGrande prefijo={`${letra}-`} numero={numero} className="text-[clamp(52px,10vw,92px)]" />
-          <h1 className="m-0 text-[26px] leading-tight font-semibold tracking-tight">Está en {etapa}</h1>
+          <span className="cod cod-holo cod-volumen text-[clamp(52px,10vw,92px)]">{letra}-{numero}</span>
+          <h1 className="m-0 text-[28px] leading-tight font-bold tracking-tight">Está en {etapa}</h1>
           <p className="m-0 text-ink2">
-            Lo cargaste en <span className="font-mono text-ink">{Math.floor(creado.segundos / 60)}:{String(creado.segundos % 60).padStart(2, '0')}</span>. {etapa} lo ve ahora con los archivos y tus notas.
+            Lo cargaste en <span className="font-mono text-ink">{Math.floor(creado.segundos / 60)}:{String(creado.segundos % 60).padStart(2, '0')}</span>. {etapa} lo ve ahora con los archivos y las indicaciones.
           </p>
         </div>
-        {creado.fallidos.length > 0 && <Aviso>No se pudieron subir: {creado.fallidos.join(', ')}. Subilos de nuevo desde el caso.</Aviso>}
-        <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 border-y border-ln py-4">
+        {creado.fallidos.length > 0 && <Aviso>No se pudo guardar: {creado.fallidos.join(', ')}. Cargalo de nuevo desde el caso.</Aviso>}
+        <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2.5 rounded-[18px] border border-ln/70 bg-sf/60 p-4">
           {resumen.map(([k, v]) => (
             <div key={k} className="contents">
-              <dt className="font-mono text-[12px] tracking-[0.06em] text-ink3 uppercase">{k}</dt>
-              <dd className="m-0 text-[15px] font-medium">{v}</dd>
+              <dt className="font-mono text-[11px] tracking-[0.1em] text-ink2 uppercase">{k}</dt>
+              <dd className="m-0 text-[15px] font-medium">{v || '—'}</dd>
             </div>
           ))}
         </dl>
@@ -477,51 +562,51 @@ export function NuevoCaso() {
             <Link to={`/casos/${creado.caso.id}`}>Ver el caso</Link>
           </Button>
         </div>
-      </Card>
+      </section>
     )
   }
 
-  const iniciales = p.paciente.replace(/[^A-ZÁÉÍÓÚÑ]/gi, '').slice(0, 2).toUpperCase()
   const faltan = requisitos.filter((r) => !r.ok)
   const diaNum = (d: Dia) => Number(d.clave.slice(8, 10))
   const mesNum = (d: Dia) => Number(d.clave.slice(5, 7))
   const letra = familia?.letra ?? 'C'
   const sugerida = habiles.find((d) => d.habiles >= minimo && cargaDe(d) < capacidad)
 
-  return (
-    <>
-      <BarraFlotante>
-        <span className="flex min-w-0 items-baseline gap-3">
-          <span className="display text-[22px] leading-none font-bold tracking-tight">{letra}-nuevo</span>
-          <span className="text-[15px] font-medium text-ink2">Nuevo caso</span>
-          <span className="hidden text-[13px] text-ink3 sm:inline">El número se asigna al crearlo</span>
-        </span>
-        <span className="ml-auto flex items-center gap-4">
-          <span className="flex items-center gap-2 text-[14px] text-ink2" aria-live="polite">
-            <span className="font-mono text-ink">{listos}/{requisitos.length}</span> listos
-            <span aria-hidden className="hidden h-2 w-24 overflow-hidden rounded-full bg-ctl/25 shadow-[inset_0_1px_2px_rgb(24_32_44/.15)] sm:block">
-              <span className="block h-full rounded-full bg-gradient-to-r from-ac to-[color-mix(in_srgb,var(--ac)_60%,var(--ok))] transition-[width] duration-500" style={{ width: `${(listos / requisitos.length) * 100}%` }} />
-            </span>
-          </span>
-          <Button variant="ink" className="min-h-10" disabled={!completo || crear.isPending} onClick={() => crear.mutate()}>
-            Crear caso <ArrowRight aria-hidden className="size-4" />
-          </Button>
-        </span>
-      </BarraFlotante>
+  // Los pasos de la cabecera son los de las secciones: el odontólogo y el paciente comparten «Quién pide».
+  const PASOS: [string, string][] = [['quien', 'Quién pide'], ['trabajo', 'Trabajo'], ['pieza', 'Pieza'], ['color', 'Color'], ['archivos', 'Archivos'], ['entrega', 'Entrega'], ['orden', 'Orden firmada']]
+  const pasos: PasoCarga[] = PASOS.map(([id, texto]) => ({ id, texto, ok: requisitos.filter((r) => r.id === id).every((r) => r.ok) }))
+  const actualId = pasos.find((x) => !x.ok)?.id
+  const hecho = (id: string) => pasos.find((x) => x.id === id)?.ok ?? false
+  const entregaAviso = !!fechaSel && (fechaSel.habiles < minimo || cargaDe(fechaSel) >= capacidad)
 
-      <section className="grid max-w-[760px] gap-2">
-        <Rotulo>Recepción · caso nuevo</Rotulo>
-        <h1 className="m-0 flex flex-wrap items-baseline gap-x-5 gap-y-1">
-          <span className="display text-[clamp(34px,5vw,52px)] leading-[1.02] font-bold tracking-tight">Cargar un pedido</span>
-          <CodigoGrande prefijo={`${letra}-`} numero="····" className="text-[clamp(22px,3vw,30px)]" />
-        </h1>
-        <p className="m-0 text-[17px] text-ink2">Pegá el mensaje del odontólogo y completamos lo que se pueda. Vos revisás y elegís lo que falta con un toque.</p>
-      </section>
+  return (
+    <div style={colores} className="contents">
+      <CabeceraNuevoCaso
+        completo={completo}
+        onIr={ir}
+        c={{
+          letra,
+          tipo: familia?.nombre ?? null,
+          pieza: p.piezas.join(' · '),
+          material: item ? `${item.nombre}${p.material && materiales.length > 1 ? ` · ${p.material}` : ''}` : '',
+          soporte: familia && (pideSoporte || soloImplante) ? (soporte === 'implante' ? 'Implante' : 'Muñón') : null,
+          color: p.sinColor ? { nombre: 'Lo define el lab', hex: '#EAD9B8' } : p.color ? { nombre: p.color, hex: TONOS[p.color] ?? '#EAD9B8' } : null,
+          pide: od?.nombre_completo ?? '',
+          paga: paga?.razon_social ?? '',
+          paciente: p.paciente,
+          pasos,
+          faltan: faltan.length,
+          reloj,
+          entrega: fechaSel?.texto ?? null,
+          entregaNota: fechaSel ? (fechaSel.habiles < minimo ? `antes del plazo de ${minimo} días hábiles` : cargaDe(fechaSel) >= capacidad ? 'día lleno' : fechaSel.habiles === 1 ? 'en 1 día hábil' : `en ${fechaSel.habiles} días hábiles`) : '',
+          entregaAviso,
+        }}
+      />
 
       <div className="flex flex-wrap items-start gap-[18px]">
         <div className="grid min-w-0 flex-[999_1_560px] gap-4">
-          {/* 01 · Pegar el pedido */}
-          <Seccion id="mensaje" n="01" titulo="Pegá el pedido" ayuda="El WhatsApp o el mail tal como llegó. Es opcional, pero ahorra la mitad del trabajo." tono="tinte" orden={0}>
+          {/* Pegar el pedido (opcional) */}
+          <Seccion id="mensaje" icono={Sparkles} titulo="Pegá el pedido" ayuda="El WhatsApp o el mail tal como llegó. Es opcional, pero ahorra la mitad del trabajo." tono="tinte" orden={0}>
             <label htmlFor="msg" className="sr-only">Mensaje del odontólogo</label>
             <textarea id="msg" rows={3} value={mensaje} onChange={(e) => setMensaje(e.target.value)} placeholder="Ej.: Hola! Te mando corona de zirconio para la 36 de J. G., color A2…" className="campo w-full resize-y p-3.5 text-[15px] leading-normal" />
             <div className="flex flex-wrap items-center gap-2">
@@ -546,13 +631,13 @@ export function NuevoCaso() {
           </Seccion>
 
           {/* 02 · Odontólogo y paciente */}
-          <Seccion id="quien" n="02" titulo="Quién pide" ayuda="El odontólogo y las iniciales del paciente." listo={requisitos[0].ok && requisitos[1].ok} delMensaje={delMensaje.has('odontologo') || delMensaje.has('paciente')} orden={1}>
+          <Seccion id="quien" n={1} actual={actualId === 'quien'} titulo="Quién pide" ayuda="El odontólogo y las iniciales del paciente." listo={hecho('quien')} delMensaje={delMensaje.has('odontologo') || delMensaje.has('paciente')} orden={1}>
             {od ? (
-              <div className="grid gap-3 rounded-[18px] bg-[linear-gradient(135deg,color-mix(in_srgb,var(--acS)_80%,var(--sf)),color-mix(in_srgb,var(--sf)_60%,var(--bg2)))] p-3.5 shadow-[inset_0_0_0_1px_var(--ln)]">
+              <div className="grid gap-3 rounded-[18px] border border-ac/30 bg-[linear-gradient(135deg,color-mix(in_srgb,var(--acS)_85%,var(--sf)),color-mix(in_srgb,var(--sf)_60%,var(--bg2)))] p-3.5 shadow-[0_1px_0_rgb(255_255_255/.8)_inset]">
                 <div className="flex flex-wrap items-center gap-3">
                   <Avatar ini={inicialesDe(od)} />
                   <span className="grid min-w-[150px] flex-1 leading-tight">
-                    <strong className="display text-[19px] font-semibold">{od.nombre_completo}</strong>
+                    <strong className="display text-[20px] font-bold tracking-tight">{od.nombre_completo}</strong>
                     <span className="text-[14px] text-ink2">{paga ? `Paga: ${paga.razon_social}` : od.clientes_detalle.length ? 'Elegí quién paga' : 'No tiene cliente cargado'}</span>
                   </span>
                   {ultimoTrabajo && (
@@ -591,31 +676,57 @@ export function NuevoCaso() {
                 <label className="campo flex min-h-12 items-center gap-2 px-3.5">
                   <Search aria-hidden className="size-4 text-ink3" />
                   <span className="sr-only">Buscar odontólogo</span>
-                  <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nombre o clínica" className="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink3" />
+                  <input value={busca} onChange={(e) => { setBusca(e.target.value); setClienteBusca(null) }} placeholder="Buscar odontólogo, clínica o cliente" className="min-w-0 flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-ink3" />
                 </label>
-                <div className="flex flex-wrap gap-2" aria-label="Odontólogos">
-                  {filtrados.map((o) => (
-                    <Chip key={o.id} on={false} onClick={() => elegirProfesional(o)}>
-                      {o.nombre_completo}
-                      <span className="text-[13px] text-ink3">{o.clientes_detalle.map((c) => c.razon_social).join(', ')}</span>
-                    </Chip>
-                  ))}
-                  {filtrados.length === 0 && (
-                    <span className="text-[14px] text-ink3">
-                      No está en la lista. Dalo de alta en <Link to="/clientes" className="font-semibold text-acT">Clientes</Link>.
-                    </span>
-                  )}
+                {clienteBusca && (
+                  <div className="flex flex-wrap items-center gap-2 text-[14px]">
+                    <span className="text-ink2">Odontólogos de <strong className="font-semibold text-ink">{clienteBusca.razon_social}</strong></span>
+                    <button type="button" onClick={() => setClienteBusca(null)} className="min-h-10 rounded-[10px] px-2 font-medium text-acT hover:bg-acS">
+                      Volver a la búsqueda
+                    </button>
+                  </div>
+                )}
+                {clientesEncontrados.length > 0 && (
+                  <div className="grid gap-1.5">
+                    <Etiqueta>Clientes</Etiqueta>
+                    <div className="flex flex-wrap gap-2" role="group" aria-label="Clientes encontrados">
+                      {clientesEncontrados.map((c) => (
+                        <Chip key={c.id} on={false} onClick={() => setClienteBusca(c)}>
+                          <Building2 aria-hidden className="size-4 text-ink3" />
+                          {c.razon_social}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div className="grid gap-1.5" role="status" aria-live="polite">
+                  {(hayBusqueda || clienteBusca) && filtrados.length > 0 && <Etiqueta>Odontólogos</Etiqueta>}
+                  <div className="flex flex-wrap gap-2" aria-label="Odontólogos">
+                    {filtrados.map((o) => (
+                      <Chip key={o.id} on={false} onClick={() => elegirProfesional(o)}>
+                        {o.nombre_completo}
+                        <span className="text-[13px] text-ink3">{o.clientes_detalle.map((c) => c.razon_social).join(', ')}</span>
+                      </Chip>
+                    ))}
+                    {buscando && filtrados.length === 0 && <span className="text-[14px] text-ink3">Buscando…</span>}
+                    {!buscando && filtrados.length === 0 && (
+                      <span className="text-[14px] text-ink3">
+                        {clienteBusca ? 'Este cliente todavía no tiene odontólogos. ' : clientesEncontrados.length ? 'Ningún odontólogo con ese nombre: probá con un cliente de arriba, o ' : 'No está cargado. '}
+                        Dalo de alta en <Link to="/clientes" className="font-semibold text-acT">Clientes</Link>.
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
             <div className="grid max-w-[280px] gap-1.5">
-              <label htmlFor="pac" className="text-[14px] font-semibold">Paciente <span className="font-normal text-ink3">(solo iniciales)</span></label>
+              <Etiqueta htmlFor="pac" aparte="(solo iniciales)">Paciente</Etiqueta>
               <input id="pac" value={p.paciente} onChange={(e) => set('paciente', e.target.value.toUpperCase().slice(0, 8), 'paciente')} placeholder="J. G." className="campo min-h-12 px-3.5 font-mono text-[17px] tracking-wide" />
             </div>
           </Seccion>
 
           {/* 03 · Trabajo */}
-          <Seccion id="trabajo" n="03" titulo="Qué hay que hacer" ayuda="Trabajo, material y sobre qué va." listo={requisitos[2].ok} delMensaje={delMensaje.has('trabajo') || delMensaje.has('material') || delMensaje.has('implante')} orden={2}>
+          <Seccion id="trabajo" n={2} actual={actualId === 'trabajo'} titulo="Qué hay que hacer" ayuda="Trabajo, material y sobre qué va." listo={hecho('trabajo')} delMensaje={delMensaje.has('trabajo') || delMensaje.has('material') || delMensaje.has('implante')} orden={2}>
             <div className="flex flex-wrap gap-2" role="group" aria-label="Trabajo">
               {familias.map((f) => (
                 <Chip key={f.id} on={p.familia === f.id} onClick={() => elegirFamilia(f.id)}>
@@ -625,7 +736,7 @@ export function NuevoCaso() {
             </div>
             {familia && itemsFamilia.length > 1 && (
               <div className="grid gap-2">
-                <span className="text-[14px] font-semibold">Tipo</span>
+                <Etiqueta>Tipo</Etiqueta>
                 <div className="flex flex-wrap gap-2" role="group" aria-label="Tipo">
                   {itemsFamilia.map((i) => (
                     <Chip key={i.id} on={p.item === i.id} onClick={() => elegirItem(i)}>
@@ -637,7 +748,7 @@ export function NuevoCaso() {
             )}
             {item && materiales.length > 1 && (
               <div className="grid gap-2">
-                <span className="text-[14px] font-semibold">Material</span>
+                <Etiqueta>Material</Etiqueta>
                 <div className="flex flex-wrap gap-2" role="group" aria-label="Material">
                   {materiales.map((m) => (
                     <Chip key={m} on={p.material === m} onClick={() => set('material', m, 'material')}>
@@ -649,7 +760,7 @@ export function NuevoCaso() {
             )}
             {familia && (pideSoporte || soloImplante) && (
               <div className="grid gap-2">
-                <span className="text-[14px] font-semibold">Va sobre</span>
+                <Etiqueta>Va sobre</Etiqueta>
                 {pideSoporte && !soloImplante && (
                   <Segmented
                     label="Soporte"
@@ -666,7 +777,7 @@ export function NuevoCaso() {
                   <div className="grid gap-3 sm:grid-cols-3">
                     {([['marca', 'Marca', 'Neodent'], ['diametro', 'Diámetro (mm)', '4.3'], ['conexion', 'Conexión', 'Cono morse']] as const).map(([k, l, ph]) => (
                       <div key={k} className="grid gap-1.5">
-                        <label htmlFor={`imp-${k}`} className="text-[14px] font-semibold">{l}</label>
+                        <Etiqueta htmlFor={`imp-${k}`}>{l}</Etiqueta>
                         <input id={`imp-${k}`} value={p.implante[k]} onChange={(e) => set('implante', { ...p.implante, [k]: e.target.value }, 'implante')} placeholder={ph} className={cn('campo min-h-11 px-3.5 text-[15px]', !p.implante[k] && 'border-wa')} />
                       </div>
                     ))}
@@ -678,12 +789,12 @@ export function NuevoCaso() {
           </Seccion>
 
           {/* 04 · Pieza */}
-          <Seccion id="pieza" n="04" titulo="Pieza" ayuda={multiple ? 'Tocá todas las piezas.' : 'Tocá la pieza. Numeración FDI, como la escribe el odontólogo.'} listo={p.piezas.length > 0} delMensaje={delMensaje.has('piezas')} orden={3}>
+          <Seccion id="pieza" n={3} actual={actualId === 'pieza'} titulo="Pieza" ayuda={multiple ? 'Tocá todas las piezas.' : 'Tocá la pieza. Numeración FDI, como la escribe el odontólogo.'} listo={hecho('pieza')} delMensaje={delMensaje.has('piezas')} orden={3}>
             <SelectorPiezas seleccion={p.piezas} onToggle={alternarPieza} onCambiar={(n) => set('piezas', n, 'piezas')} multiple={multiple} />
           </Seccion>
 
           {/* 05 · Color */}
-          <Seccion id="color" n="05" titulo="Color" ayuda="Guía Vita clásica." listo={!!p.color || p.sinColor} delMensaje={delMensaje.has('color')} orden={4}>
+          <Seccion id="color" n={4} actual={actualId === 'color'} titulo="Color" ayuda="Guía Vita clásica." listo={hecho('color')} delMensaje={delMensaje.has('color')} orden={4}>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(82px,1fr))] gap-2" role="group" aria-label="Color">
               {VITA.map((c) => (
                 <Chip
@@ -708,7 +819,7 @@ export function NuevoCaso() {
           </Seccion>
 
           {/* 06 · Archivos */}
-          <Seccion id="archivos" n="06" titulo="Archivos" ayuda="Escaneo, fotos y la orden. Decí qué es cada uno: el odontólogo los guarda como «escaneo 33423» y después nadie sabe cuál era." listo={requisitos[5].ok} orden={5}>
+          <Seccion id="archivos" n={5} actual={actualId === 'archivos'} titulo="Archivos" ayuda="Escaneo, fotos y la orden. Decí qué es cada uno: el odontólogo los guarda como «escaneo 33423» y después nadie sabe cuál era." listo={hecho('archivos')} orden={5}>
             <label
               className="grid cursor-pointer justify-items-center gap-1.5 rounded-[20px] border-2 border-dashed border-ctl bg-[radial-gradient(80%_120%_at_50%_0%,color-mix(in_srgb,var(--acS)_70%,transparent),transparent)] px-4 py-7 text-center transition duration-200 hover:-translate-y-0.5 hover:border-ac hover:bg-acS/60 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-fo"
               onDragOver={(e) => e.preventDefault()}
@@ -751,10 +862,10 @@ export function NuevoCaso() {
                       </button>
                     </div>
                     <div className="grid gap-1.5">
-                      <span className="flex items-center gap-2 text-[14px] font-semibold">
+                      <Etiqueta className="flex items-center gap-2">
                         ¿Qué es este archivo?
-                        {!a.categoria && <span className="rounded-full bg-waS px-2 py-px text-[12px] font-semibold text-wa">elegí uno</span>}
-                      </span>
+                        {!a.categoria && <span className="rounded-full bg-waS px-2 py-px font-sans text-[12px] font-semibold tracking-normal text-wa normal-case">elegí uno</span>}
+                      </Etiqueta>
                       <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Categoría de ${a.archivo.name}`}>
                         {CATEGORIAS[a.tipo].map((c) => (
                           <Chip key={c} on={a.categoria === c} onClick={() => editarArchivo(i, { categoria: c })} className="min-h-10 rounded-full px-3.5 text-[14px]">
@@ -764,7 +875,7 @@ export function NuevoCaso() {
                       </div>
                     </div>
                     <div className="grid gap-1.5">
-                      <label htmlFor={`com-${i}`} className="text-[14px] font-semibold">Comentario <span className="font-normal text-ink3">(opcional)</span></label>
+                      <Etiqueta htmlFor={`com-${i}`} aparte="(opcional)">Comentario</Etiqueta>
                       <input id={`com-${i}`} value={a.comentario} onChange={(e) => editarArchivo(i, { comentario: e.target.value })} placeholder={COMENTARIOS[a.tipo] ?? 'Ej.: lo que tenga que saber el laboratorio'} className="campo min-h-11 px-3.5 text-[15px]" />
                     </div>
                     <p className="m-0 flex flex-wrap items-center gap-x-2 text-[13px] text-ink3">
@@ -782,7 +893,7 @@ export function NuevoCaso() {
           </Seccion>
 
           {/* 07 · Fecha de entrega */}
-          <Seccion id="entrega" n="07" titulo="Fecha de entrega" ayuda={item ? `${item.nombre}: ${minimo} días hábiles como mínimo. Cada día muestra cuánto trabajo tiene.` : 'Elegí el día. Se sugiere según el trabajo y la carga de cada día.'} listo={!!p.fecha} delMensaje={delMensaje.has('fecha')} tono="tinte" orden={6}>
+          <Seccion id="entrega" n={6} actual={actualId === 'entrega'} titulo="Fecha de entrega" ayuda={item ? `${item.nombre}: ${minimo} días hábiles como mínimo. Cada día muestra cuánto trabajo tiene.` : 'Elegí el día. Se sugiere según el trabajo y la carga de cada día.'} listo={hecho('entrega')} delMensaje={delMensaje.has('fecha')} tono="tinte" orden={6}>
             <div className="grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-2.5" role="group" aria-label="Fecha de entrega">
               {habiles.map((d) => {
                 const on = p.fecha === d.clave
@@ -824,7 +935,7 @@ export function NuevoCaso() {
           </Seccion>
 
           {/* 08 · Orden firmada */}
-          <Seccion id="orden" n="08" titulo="Orden firmada" ayuda="La orden del odontólogo es obligatoria para el laboratorio (Decreto 1630/71). Todavía llega mucha en papel: acá se transcribe mirando la foto." listo={ordenOk} tono="calido" orden={7}>
+          <Seccion id="orden" n={7} actual={actualId === 'orden'} titulo="Orden firmada" ayuda="La orden del odontólogo es obligatoria para el laboratorio (Decreto 1630/71). Todavía llega mucha en papel: acá se transcribe mirando la foto." listo={hecho('orden')} tono="calido" orden={7}>
             <Segmented
               label="Cómo llegó la orden"
               value={p.orden ?? ('' as 'papel')}
@@ -838,10 +949,10 @@ export function NuevoCaso() {
             {p.orden === 'papel' && (
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <span className="flex items-center gap-2 text-[14px] font-semibold">
+                  <Etiqueta className="flex items-center gap-2">
                     <Camera aria-hidden className="size-4 text-acT" />
-                    1. La foto de la orden
-                  </span>
+                    1 · La foto de la orden
+                  </Etiqueta>
                   {p.ordenFoto ? (
                     <>
                       <LenteImagen src={fotoOrden!} alt="Foto de la orden en papel" />
@@ -867,17 +978,18 @@ export function NuevoCaso() {
                   )}
                 </div>
                 <div className="grid gap-3 rounded-[18px] bg-sf/70 p-4 shadow-[inset_0_0_0_1px_var(--ln)]">
-                  <span className="flex items-center gap-2 text-[14px] font-semibold">
+                  <Etiqueta className="flex items-center gap-2">
                     <PenLine aria-hidden className="size-4 text-acT" />
-                    2. Transcribila vos (son pocos datos)
-                  </span>
+                    2 · Transcribila vos
+                    <span className="font-sans text-[12.5px] font-normal tracking-normal text-ink3 normal-case">(son pocos datos)</span>
+                  </Etiqueta>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="grid gap-1.5">
-                      <label htmlFor="ot" className="text-[14px] font-semibold">Número de orden</label>
+                      <Etiqueta htmlFor="ot">Número de orden</Etiqueta>
                       <input id="ot" value={p.numeroOrden} onChange={(e) => set('numeroOrden', e.target.value.toUpperCase())} placeholder="OT-2291" className="campo min-h-11 px-3.5 font-mono text-[15px]" />
                     </div>
                     <div className="grid gap-1.5">
-                      <label htmlFor="ot-fecha" className="text-[14px] font-semibold">Fecha de la orden</label>
+                      <Etiqueta htmlFor="ot-fecha">Fecha de la orden</Etiqueta>
                       <input id="ot-fecha" type="date" value={p.fechaOrden} onChange={(e) => set('fechaOrden', e.target.value)} className="campo min-h-11 px-3.5 text-[15px]" />
                     </div>
                   </div>
@@ -921,57 +1033,41 @@ export function NuevoCaso() {
           </Seccion>
 
           {/* Notas */}
-          <Card className="entra grid gap-2 p-5 sm:p-6" style={{ '--d': 8 } as CSSProperties}>
-            <label htmlFor="notas" className="text-[14px] font-semibold">Notas para el laboratorio <span className="font-normal text-ink3">(opcional)</span></label>
-            <textarea id="notas" rows={2} value={p.notas} onChange={(e) => set('notas', e.target.value)} placeholder="Ej.: el paciente es bruxómano; probar antes de terminar" className="campo w-full resize-y p-3.5 text-[15px]" />
+          <Card className="proceso-caso entra grid gap-2 p-5 sm:p-6" style={{ '--d': 8 } as CSSProperties}>
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+              <Etiqueta htmlFor="notas" aparte="(opcional)">Indicaciones del odontólogo</Etiqueta>
+              {delMensaje.has('indicaciones') && <span className="rounded-full bg-waS px-2.5 py-0.5 font-mono text-[11px] font-semibold tracking-[0.06em] text-wa uppercase shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--wa)_30%,transparent)]">Del mensaje · revisá</span>}
+            </div>
+            <p id="notas-ayuda" className="m-0 text-[13.5px] text-ink2">Lo que dijo de la boca, la encía, los dientes vecinos, molestias o cómo lo quiere. Lo ve el equipo en el pedido del caso.</p>
+            <textarea
+              id="notas"
+              aria-describedby="notas-ayuda"
+              rows={4}
+              value={p.notas}
+              onChange={(e) => {
+                set('notas', e.target.value)
+                if (delMensaje.has('indicaciones')) setDelMensaje((d) => new Set([...d].filter((c) => c !== 'indicaciones')))
+              }}
+              placeholder="Ej.: encía retraída en la 36; el diente vecino está inclinado; prefiere el contacto bien ajustado"
+              className="campo w-full resize-y p-3.5 text-[15px]"
+            />
           </Card>
         </div>
 
-        {/* Ficha del pedido: dice qué falta y lleva a esa parte. */}
-        <aside aria-label="Ficha del pedido" className="min-w-0 flex-[1_1_330px] lg:sticky lg:top-24">
-          <Card className="grid gap-4 p-5">
-            <div className="flex items-center gap-3.5">
-              <span aria-hidden className="display grid size-[68px] shrink-0 place-items-center rounded-full bg-gradient-to-br from-[color-mix(in_srgb,var(--ac)_70%,white)] via-ac to-[color-mix(in_srgb,var(--ac)_75%,black)] text-[26px] font-bold text-acI shadow-[inset_0_1px_0_rgb(255_255_255/.4),0_14px_24px_-10px_var(--ac)]">
-                {iniciales || <Stethoscope className="size-7" />}
-              </span>
-              <span className="grid min-w-0 flex-1 gap-0.5">
-                <span className="display truncate text-[26px] leading-tight font-semibold tracking-tight">{p.paciente || 'Paciente'}</span>
-                <span className="truncate text-[15px] text-ink2">{od ? `${od.nombre_completo}${paga ? ` · ${paga.razon_social}` : ''}` : 'Sin odontólogo'}</span>
-              </span>
-              <Codigo className="self-start text-[12px]">⏱ {reloj}</Codigo>
-            </div>
-
-            <div className="h-px bg-gradient-to-r from-transparent via-ctl/50 to-transparent" />
-
+        {/* Ficha del pedido: la pieza, los archivos y lo que falta. Quién, qué y cuándo ya los cuenta la cabecera. */}
+        <aside aria-label="Ficha del pedido" className="min-w-0 flex-[1_1_330px] lg:sticky lg:top-4">
+          <Card className="proceso-caso grid gap-4 p-5">
             <section aria-label="Pieza" className="grid gap-2">
               <span className="flex items-center gap-2 font-mono text-[11px] font-semibold tracking-[0.1em] text-acT uppercase">
                 <span aria-hidden className="size-1.5 rounded-full bg-ac" />
                 Pieza a trabajar
               </span>
-              <div className="grid gap-2 rounded-[18px] bg-[linear-gradient(150deg,color-mix(in_srgb,var(--ac)_16%,var(--sf)),color-mix(in_srgb,var(--ac)_6%,var(--sf)))] p-3.5 shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--ac)_20%,transparent)]">
+              <div className="grid gap-2 rounded-[18px] border border-ac/25 bg-[linear-gradient(150deg,color-mix(in_srgb,var(--ac)_16%,var(--sf)),color-mix(in_srgb,var(--ac)_6%,var(--sf)))] p-3.5 shadow-[0_1px_0_rgb(255_255_255/.8)_inset]">
                 <div className="flex items-end justify-between gap-3">
                   <span className={cn('display leading-none font-bold tracking-tight', p.piezas.length ? 'text-[56px] text-acT' : 'text-[40px] text-ink3')}>{p.piezas.length ? p.piezas.join(' · ') : '—'}</span>
-                  <span className="pb-1 text-right text-[13px] text-ink2">{p.piezas.length ? (p.piezas.length > 1 ? `${p.piezas.length} piezas` : 'FDI') : 'Elegila en el paso 04'}</span>
+                  <span className="pb-1 text-right text-[13px] text-ink2">{p.piezas.length ? (p.piezas.length > 1 ? `${p.piezas.length} piezas` : 'FDI') : 'Elegila en el paso 3'}</span>
                 </div>
                 <MiniOdontograma piezas={p.piezas} />
-              </div>
-            </section>
-
-            <section aria-label="Trabajo" className="grid gap-2">
-              <span className="flex items-center gap-2 font-mono text-[11px] font-semibold tracking-[0.1em] text-acT uppercase">
-                <span aria-hidden className="size-1.5 rounded-full bg-ac" />
-                Trabajo
-              </span>
-              <div className="grid grid-cols-2 gap-2">
-                <Mosaico icono={Stethoscope} k="Trabajo" vacio={!item}>{item?.nombre}{p.material && materiales.length > 1 ? ` · ${p.material.toLowerCase()}` : ''}</Mosaico>
-                <Mosaico icono={Layers} k="Va sobre" vacio={!familia || !(pideSoporte || soloImplante)}>{soporte === 'implante' ? 'Implante' : 'Muñón'}</Mosaico>
-                <Mosaico icono={Palette} k="Color" vacio={!p.color && !p.sinColor}>
-                  <span className="flex items-center gap-1.5">
-                    {p.color && !p.sinColor && <span aria-hidden className="size-4 rounded-full border border-black/15" style={{ background: TONOS[p.color] }} />}
-                    {p.sinColor ? 'Lo define el lab' : p.color}
-                  </span>
-                </Mosaico>
-                <Mosaico icono={CalendarClock} k="Entrega" vacio={!fechaSel}>{fechaSel?.texto}</Mosaico>
               </div>
             </section>
 
@@ -990,11 +1086,11 @@ export function NuevoCaso() {
 
             <div className="grid gap-2">
               <div className="flex items-baseline justify-between">
-                <span className="display text-[16px] font-semibold">Datos cargados</span>
-                <span className="font-mono text-[14px] text-ink2">{listos} de {requisitos.length}</span>
+                <span className="display text-[16px] font-bold">Datos cargados</span>
+                <span className="font-mono text-[14px] text-ink2" aria-live="polite">{listos} de {requisitos.length}</span>
               </div>
               <div aria-hidden className="h-2.5 overflow-hidden rounded-full bg-ctl/25 shadow-[inset_0_1px_2px_rgb(24_32_44/.18)]">
-                <div className="h-full rounded-full bg-gradient-to-r from-ac to-[color-mix(in_srgb,var(--ac)_55%,var(--ok))] shadow-[0_0_12px_var(--ac)] transition-[width] duration-500" style={{ width: `${(listos / requisitos.length) * 100}%` }} />
+                <div className="h-full rounded-full bg-[linear-gradient(90deg,var(--ac),color-mix(in_srgb,var(--ac)_55%,var(--ok)))] shadow-[0_0_12px_var(--ac)] transition-[width] duration-500" style={{ width: `${(listos / requisitos.length) * 100}%` }} />
               </div>
               {completo ? (
                 <p className="m-0 flex items-center gap-2 text-[14.5px] font-semibold text-ok">
@@ -1005,12 +1101,12 @@ export function NuevoCaso() {
                 <ul className="m-0 grid list-none gap-1 p-0" aria-label="Lo que falta">
                   {faltan.map((r) => (
                     <li key={r.texto}>
-                      <button type="button" onClick={() => ir(r.id)} className="group flex min-h-10 w-full items-center gap-2.5 rounded-[12px] px-2 text-left text-[14.5px] transition hover:bg-bg2/80">
+                      <button type="button" onClick={() => ir(r.id)} className="group flex min-h-10 w-full items-center gap-2.5 rounded-[12px] px-2 text-left text-[14.5px] transition hover:bg-sf/80">
                         <span aria-hidden className="grid size-5 place-items-center rounded-full border border-dashed border-ctl text-ink3 transition group-hover:border-ac group-hover:text-acT">
                           <ArrowRight className="size-3" />
                         </span>
                         {r.texto}
-                        <span className="ml-auto text-[12.5px] text-ink3">obligatorio</span>
+                        <span className="ml-auto font-mono text-[10.5px] tracking-[0.1em] text-ink3 uppercase">obligatorio</span>
                       </button>
                     </li>
                   ))}
@@ -1018,12 +1114,12 @@ export function NuevoCaso() {
               )}
             </div>
 
-            <div className="flex items-start gap-3 rounded-[16px] bg-bg2/70 p-3 text-[14px] text-ink2">
-              <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-[12px] bg-sf shadow-[0_2px_6px_rgb(24_32_44/.12)]">
+            <div className="flex items-start gap-3 rounded-[16px] border border-ln/70 bg-sf/60 p-3 text-[14px] text-ink2">
+              <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-[12px] bg-gradient-to-br from-acS to-[color-mix(in_srgb,var(--acS)_45%,var(--sf))] shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--ac)_22%,transparent)]">
                 <Stethoscope className="size-4.5 text-acT" />
               </span>
               <span>
-                <strong className="font-semibold text-ink">Entra a Revisión técnica.</strong> Al crearlo, el equipo lo ve con los archivos, sus categorías y tus notas.
+                <strong className="font-semibold text-ink">Entra a Revisión técnica.</strong> Al crearlo, el equipo lo ve con los archivos, sus categorías y las indicaciones.
               </span>
             </div>
 
@@ -1036,6 +1132,6 @@ export function NuevoCaso() {
           </Card>
         </aside>
       </div>
-    </>
+    </div>
   )
 }

@@ -125,8 +125,18 @@ export function useEscaneo(caso: string) {
     onSuccess: refrescar,
   })
 
+  /** El escaneo del odontólogo (versión 1): se sube en un caso que todavía no lo tiene y después no se reemplaza. */
+  const agregarInicial = useMutation({
+    mutationFn: async (lista: { archivo: File; categoria: string }[]) => {
+      const ids: string[] = []
+      for (const a of lista) ids.push((await subirArchivo(caso, a.archivo, { tipo: 'escaneo', categoria: a.categoria })).id)
+      return pedir(api.POST('/api/casos/{id}/versiones', { params: { path: { id: caso } }, body: { origen: 'inicial', archivos: ids, incluye_base: true, descripcion: 'Escaneo del odontólogo' } }))
+    },
+    onSuccess: () => (refrescar(), cliente.invalidateQueries({ queryKey: ['archivos', caso] })),
+  })
+
   const datos = armarEscaneo(caso, consulta.data ?? [])
-  return { ...datos, consulta, agregarNota, editarNota, agregarVersion }
+  return { ...datos, consulta, agregarNota, editarNota, agregarVersion, agregarInicial }
 }
 
 /** Descarga la versión en .zip (mallas + notas.csv) que arma el backend (P8). */

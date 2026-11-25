@@ -5,11 +5,12 @@ from drf_spectacular.views import SpectacularAPIView
 from archivos import views as ar
 from auditoria.views import EventosView
 from casos import views as cs
+from casos import views_tablero as vt
 from catalogo import views as ct
 from cuentas import views as c
 from cuentas import views_equipo as e
 from directorio import views as d
-from hilo.views import MensajesView
+from hilo.views import MencionablesView, MensajesView
 
 api = [
     path('salud', c.SaludView.as_view()),
@@ -42,12 +43,18 @@ api = [
     path('catalogo/rutas/<uuid:pk>', ct.PlantillaEtapasView.as_view()),
     path('catalogo/checklists', ct.PlantillasChecklistView.as_view()),
     path('catalogo/checklists/<uuid:pk>', ct.PlantillaChecklistView.as_view()),
+    path('vistas/mis-cajas', vt.MisCajasView.as_view()),
+    path('vistas/tablero', vt.TableroView.as_view()),
     path('casos', cs.CasosView.as_view()),
     path('casos/carga', cs.CargaView.as_view()),
     path('casos/<uuid:pk>', cs.CasoView.as_view()),
     path('casos/<uuid:pk>/trabajos/<uuid:trabajo>/avanzar', cs.AvanzarView.as_view()),
+    path('casos/<uuid:pk>/trabajos/<uuid:trabajo>/iniciar', cs.IniciarView.as_view()),
+    path('casos/<uuid:pk>/trabajos/<uuid:trabajo>/problema', cs.ProblemaView.as_view()),
     path('casos/<uuid:pk>/entregar', cs.EntregarView.as_view()),
     path('casos/<uuid:pk>/cancelar', cs.CancelarView.as_view()),
+    path('casos/<uuid:pk>/pausar', cs.PausarView.as_view()),
+    path('casos/<uuid:pk>/reanudar', cs.ReanudarView.as_view()),
     path('casos/<uuid:pk>/cambios', cs.CambiosView.as_view()),
     path('casos/<uuid:pk>/cambios/confirmar', cs.ConfirmarCambioView.as_view()),
     path('casos/<uuid:pk>/fichas', cs.FichasView.as_view()),
@@ -58,6 +65,7 @@ api = [
     path('casos/<uuid:pk>/archivos/<uuid:archivo>/descarga', ar.DescargaView.as_view()),
     path('casos/<uuid:pk>/archivos/<uuid:archivo>/contenido', ar.ContenidoView.as_view()),
     path('casos/<uuid:pk>/mensajes', MensajesView.as_view()),
+    path('casos/<uuid:pk>/mencionables', MencionablesView.as_view()),
     path('casos/<uuid:pk>/versiones', ar.VersionesView.as_view()),
     path('casos/<uuid:pk>/versiones/<uuid:version>/notas', ar.NotasView.as_view()),
     path('casos/<uuid:pk>/versiones/<uuid:version>/notas/<uuid:nota>', ar.NotaView.as_view()),

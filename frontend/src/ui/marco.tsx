@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Activity, Building2, CheckCheck, Contact, LayoutGrid, LogOut, Plus, Rows3, UserRound, Users, type LucideIcon } from 'lucide-react'
+import { Activity, BarChart3, Building2, CheckCheck, Contact, LayoutGrid, LogOut, PackageCheck, Plus, Rows3, ScanLine, UserRound, Users, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router'
 import { api, pedir } from '../api/cliente'
@@ -58,13 +58,19 @@ export function Marca({ className, nombre }: { className?: string; nombre?: stri
   )
 }
 
-type Enlace = { a: string; texto: string; icono: LucideIcon; permiso?: string; fin?: boolean; cuenta?: 'revision' }
+type Enlace = { a: string; texto: string; icono: LucideIcon; permiso?: string; algunRol?: string[]; fin?: boolean; cuenta?: 'revision' }
+
+/** Quienes tienen etapas propias en la ruta: son los que usan "Mis cajas". Supervisión ve todo en el Tablero. */
+const ROLES_DE_ETAPA = ['recepcion', 'revision', 'cad', 'produccion', 'control']
 
 /** Lo del día a día arriba; lo de administración, separado abajo. */
 const PRINCIPAL: Enlace[] = [
   { a: '/nuevo', texto: 'Nuevo caso', icono: Plus, permiso: 'crear_caso' },
   { a: '/revision', texto: 'Revisión técnica', icono: CheckCheck, permiso: 'revisar', cuenta: 'revision' },
+  { a: '/mis-cajas', texto: 'Mis cajas', icono: PackageCheck, algunRol: ROLES_DE_ETAPA },
+  { a: '/p', texto: 'Producción', icono: ScanLine, permiso: 'avanzar_produccion' },
   { a: '/casos', texto: 'Casos', icono: Rows3 },
+  { a: '/tablero', texto: 'Tablero', icono: BarChart3, permiso: 'ver_tablero' },
   { a: '/clientes', texto: 'Clientes', icono: Contact },
   { a: '/catalogo', texto: 'Catálogo', icono: LayoutGrid },
 ]
@@ -112,7 +118,8 @@ export function Marco({ children }: { children: ReactNode }) {
   const cliente = useQueryClient()
   const membresia = yo?.membresia_activa
   const varios = (yo?.membresias.length ?? 0) > 1
-  const visibles = (lista: Enlace[]) => lista.filter((e) => !e.permiso || puede(yo, e.permiso))
+  const visibles = (lista: Enlace[]) =>
+    lista.filter((e) => (!e.permiso || puede(yo, e.permiso)) && (!e.algunRol || e.algunRol.some((r) => membresia?.roles?.some((x) => x === r))))
   // Cuántos casos esperan revisión técnica: la misma consulta que la lista de casos (se comparte el caché).
   const puedeRevisar = puede(yo, 'revisar')
   const abiertos = useQuery({

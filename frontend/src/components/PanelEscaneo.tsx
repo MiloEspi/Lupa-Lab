@@ -16,6 +16,15 @@ const VISTAS: { id: Vista; label: string }[] = [
 ]
 // Un color por versión para distinguirlas cuando se superponen.
 const TINTES = ['#6FA8E8', '#EFC98A', '#6FCFB8', '#C79BE8', '#EE9F9F']
+const CATEGORIAS = ['Arcada inferior', 'Arcada superior', 'Mordida', 'Muñón / preparación']
+/** Adivina qué es cada malla por su nombre; recepción lo corrige si hace falta. */
+const categoriaDe = (nombre: string) => {
+  const n = nombre.toLowerCase()
+  if (/sup|maxil/.test(n)) return 'Arcada superior'
+  if (/mord|bite|oclus/.test(n)) return 'Mordida'
+  if (/mu[nñ]|prep|tall/.test(n)) return 'Muñón / preparación'
+  return 'Arcada inferior'
+}
 const SIN_ESCANEO: ArchivoCaso = { id: '', nombre: '', tipo: 'inicial', version: 0, autor: '', cuando: '', origen: '', bloqueado: true, resumen: '', formato: '', capas: [] }
 const kb = (n: number) => (n > 1_000_000 ? `${(n / 1_000_000).toLocaleString('es-AR', { maximumFractionDigits: 1 })} MB` : `${Math.round(n / 1000)} KB`)
 
@@ -37,6 +46,8 @@ export function PanelEscaneo({
   alto = '500px',
   panelPorDefecto,
   compacto = false,
+  puedeSubirVersion = true,
+  puedeSubirInicial = true,
 }: {
   /** Quién escribe y sube: "Ana, recepción". */
   autor: string
@@ -50,8 +61,14 @@ export function PanelEscaneo({
   panelPorDefecto?: boolean
   /** Archivos como una fila de botones chicos en vez de tarjetas grandes: el visor sube en la pantalla. */
   compacto?: boolean
+  /** Subir una versión desde exocad es de CAD: a los demás roles el botón se les explica en vez de fallar después de subir. */
+  puedeSubirVersion?: boolean
+  /** Subir el escaneo del odontólogo (el original) es de Recepción y Supervisión. */
+  puedeSubirInicial?: boolean
 }) {
-  const { archivos, notas: guardadas, agregarNota, editarNota, agregarVersion } = useEscaneo(casoId)
+  const { archivos, notas: guardadas, agregarNota, editarNota, agregarVersion, agregarInicial } = useEscaneo(casoId)
+  const [inicialesPend, setInicialesPend] = useState<{ archivo: File; categoria: string }[]>([])
+  const [errorInicial, setErrorInicial] = useState<string | null>(null)
   // Nota nueva todavía sin guardar: se ve en el visor y en la lista, pero recién existe al escribirle algo.
   const [nueva, setNueva] = useState<NotaCaso | null>(null)
   const notas = nueva ? [...guardadas, nueva] : guardadas
@@ -165,7 +182,7 @@ export function PanelEscaneo({
   }, [maximizado])
 
   const recibirArchivo = (f: File) => {
-    if (!permitirVersiones) return
+    if (!permitirVersiones || !puedeSubirVersion) return
     setErrorArchivo(FORMATOS.includes(extDe(f.name)) ? null : `Formato .${extDe(f.name)} no soportado. Exportá STL, PLY u OBJ desde exocad.`)
     setPendiente(f)
   }
@@ -431,32 +448,106 @@ export function PanelEscaneo({
             </button>
           )
         })}
-        <label className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-dashed border-ctl bg-sf px-3.5 text-[14px] font-medium text-ink hover:bg-sf2 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-fo" title="STL, PLY u OBJ. El original no se modifica: lo que se hace en exocad se guarda como versión nueva.">
-          <Upload aria-hidden className="size-4 text-acT" />
-          Subir
-          <span className="sr-only"> versión desde exocad</span>
-          <input
-            type="file"
-            accept=".stl,.ply,.obj"
-            className="sr-only"
-            onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) recibirArchivo(f)
-              e.target.value = ''
-            }}
-          />
-        </label>
+        {puedeSubirVersion ? (
+          <label className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 rounded-full border border-dashed border-ctl bg-sf px-3.5 text-[14px] font-medium text-ink hover:bg-sf2 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-fo" title="STL, PLY u OBJ. El original no se modifica: lo que se hace en exocad se guarda como versión nueva.">
+            <Upload aria-hidden className="size-4 text-acT" />
+            Subir
+            <span className="sr-only"> versión desde exocad</span>
+            <input
+              type="file"
+              accept=".stl,.ply,.obj"
+              className="sr-only"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) recibirArchivo(f)
+                e.target.value = ''
+              }}
+            />
+          </label>
+        ) : (
+          <span className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-dashed border-ln bg-sf/60 px-3.5 text-[14px] text-ink2" title="Las versiones desde exocad las sube CAD. Entrá con un usuario de CAD para probarlo.">
+            <Lock aria-hidden className="size-4" />
+            Subir versión: solo CAD
+          </span>
+        )}
       </div>
     ) : null
 
   if (!archivos.length)
     return (
-      <div className="grid min-h-[240px] place-items-center rounded-[18px] border border-dashed border-ctl bg-sf/60 p-8 text-center">
-        <span className="grid max-w-[420px] gap-1.5">
-          <Box aria-hidden className="mx-auto size-8 text-acT" />
+      <div className="grid gap-3 rounded-[18px] border border-dashed border-ctl bg-sf/60 p-6">
+        <div className="grid justify-items-center gap-1.5 text-center">
+          <Box aria-hidden className="size-8 text-acT" />
           <strong className="text-[17px] font-semibold">Este caso no tiene escaneo cargado</strong>
-          <span className="text-[14px] text-ink2">Llegó como impresión física o el escaneo todavía no se subió.</span>
-        </span>
+          <span className="max-w-[460px] text-[14px] text-ink2">Llegó como impresión física o el escaneo todavía no se subió. El escaneo del odontólogo queda como original: no se reemplaza, lo que se hace en exocad se suma como versión.</span>
+        </div>
+
+        {puedeSubirInicial ? (
+          <div className="mx-auto grid w-full max-w-[560px] gap-3">
+            <label className="grid min-h-[88px] cursor-pointer content-center justify-items-center gap-1 rounded-[14px] border border-dashed border-ctl bg-sf p-3 text-center text-[15px] font-medium text-ink hover:bg-acS focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-fo">
+              <Upload aria-hidden className="size-5 text-acT" />
+              Subir el escaneo del odontólogo
+              <span className="text-[12.5px] font-normal text-ink2">STL, PLY u OBJ · podés elegir las dos arcadas juntas</span>
+              <input
+                type="file"
+                multiple
+                accept=".stl,.ply,.obj"
+                className="sr-only"
+                onChange={(e) => {
+                  const fs = [...(e.target.files ?? [])]
+                  const buenos = fs.filter((f) => FORMATOS.includes(extDe(f.name)))
+                  setErrorInicial(buenos.length < fs.length ? `Se saltearon ${fs.length - buenos.length} archivo(s) que no son STL, PLY ni OBJ.` : null)
+                  if (buenos.length) setInicialesPend((p) => [...p, ...buenos.map((archivo) => ({ archivo, categoria: categoriaDe(archivo.name) }))])
+                  e.target.value = ''
+                }}
+              />
+            </label>
+
+            {inicialesPend.length > 0 && (
+              <ul aria-label="Archivos para subir" className="m-0 grid list-none gap-2 p-0">
+                {inicialesPend.map((a, i) => (
+                  <li key={a.archivo.name + i} className="flex flex-wrap items-center gap-2 rounded-[12px] border border-ln bg-sf p-2 pl-3">
+                    <span className="min-w-0 flex-1 truncate text-[14px] font-medium">
+                      {a.archivo.name} <span className="font-normal text-ink2">· {kb(a.archivo.size)}</span>
+                    </span>
+                    <label className="sr-only" htmlFor={`cat-${i}`}>Qué es {a.archivo.name}</label>
+                    <select id={`cat-${i}`} value={a.categoria} onChange={(e) => setInicialesPend((p) => p.map((x, j) => (j === i ? { ...x, categoria: e.target.value } : x)))} className="campo min-h-10 px-2.5 text-[14px]">
+                      {CATEGORIAS.map((c) => (
+                        <option key={c}>{c}</option>
+                      ))}
+                    </select>
+                    <button type="button" aria-label={`Sacar ${a.archivo.name}`} onClick={() => setInicialesPend((p) => p.filter((_, j) => j !== i))} className="grid size-10 place-items-center rounded-[10px] text-[20px] text-ink2 hover:bg-sf2">
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {errorInicial && (
+              <p role="alert" className="m-0 rounded-[12px] border border-ba bg-baS p-2.5 text-[14px] font-medium text-ba">
+                {errorInicial}
+              </p>
+            )}
+            {inicialesPend.length > 0 && (
+              <Button
+                disabled={agregarInicial.isPending}
+                onClick={() =>
+                  agregarInicial.mutate(inicialesPend, {
+                    onSuccess: () => (setInicialesPend([]), setErrorInicial(null)),
+                    onError: (e) => setErrorInicial(e.message),
+                  })
+                }
+              >
+                {agregarInicial.isPending ? 'Subiendo…' : `Guardar el escaneo inicial (${inicialesPend.length} ${inicialesPend.length === 1 ? 'archivo' : 'archivos'})`}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <p className="m-0 text-center text-[14px] text-ink2">
+            <Lock aria-hidden className="mr-1 inline size-4 align-[-3px]" />
+            El escaneo inicial lo sube Recepción.
+          </p>
+        )}
       </div>
     )
 
@@ -477,21 +568,28 @@ export function PanelEscaneo({
             {archivos.map((a) => (
               <ArchivoTarjeta key={a.id} a={a} activo={a.id === activo.id} notas={notas.filter((n) => n.archivoId === a.id).length} onPick={() => elegir(a.id)} />
             ))}
-            <label className="grid min-h-[84px] cursor-pointer content-center justify-items-center gap-1 rounded-[14px] border border-dashed border-ctl bg-sf p-3 text-center text-[14px] font-medium text-ink hover:bg-sf2 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-fo">
-              <Upload aria-hidden className="size-5 text-acT" />
-              Subir versión desde exocad
-              <span className="text-[12px] font-normal text-ink3">STL, PLY u OBJ · o soltalo sobre el visor</span>
-              <input
-                type="file"
-                accept=".stl,.ply,.obj"
-                className="sr-only"
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  if (f) recibirArchivo(f)
-                  e.target.value = ''
-                }}
-              />
-            </label>
+            {puedeSubirVersion ? (
+              <label className="grid min-h-[84px] cursor-pointer content-center justify-items-center gap-1 rounded-[14px] border border-dashed border-ctl bg-sf p-3 text-center text-[14px] font-medium text-ink hover:bg-sf2 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-fo">
+                <Upload aria-hidden className="size-5 text-acT" />
+                Subir versión desde exocad
+                <span className="text-[12px] font-normal text-ink3">STL, PLY u OBJ · o soltalo sobre el visor</span>
+                <input
+                  type="file"
+                  accept=".stl,.ply,.obj"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) recibirArchivo(f)
+                    e.target.value = ''
+                  }}
+                />
+              </label>
+            ) : (
+              <div className="grid min-h-[84px] content-center justify-items-center gap-1 rounded-[14px] border border-dashed border-ln bg-sf/60 p-3 text-center text-[14px] text-ink2">
+                <Lock aria-hidden className="size-5" />
+                Las versiones desde exocad las sube CAD
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -580,7 +678,7 @@ export function PanelEscaneo({
             }}
             modoNota={modoNota}
             onAdd={nuevaNota}
-            onSoltar={permitirVersiones ? recibirArchivo : undefined}
+            onSoltar={permitirVersiones && puedeSubirVersion ? recibirArchivo : undefined}
             ocultar={ocultas}
             estilos={estilos}
             notasVisibles={notasVisibles}

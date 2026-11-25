@@ -60,6 +60,7 @@ export function estadoCaso(c: Caso): { texto: string; tono: Tono } {
   if (c.estado === 'cancelado') return { texto: 'Cancelado', tono: 'normal' }
   if (c.cambio_pendiente) return { texto: 'Cambio sin confirmar', tono: 'frenado' }
   if (c.en_espera) return { texto: 'En espera del odontólogo', tono: 'frenado' }
+  if (c.pausado) return { texto: 'Pausado', tono: 'frenado' }
   if (!c.fecha_prometida) return { texto: 'Sin fecha prometida', tono: 'normal' }
   const faltan = habilesHasta(c.fecha_prometida)
   if (faltan < 0) return { texto: 'Atrasado', tono: 'frenado' }

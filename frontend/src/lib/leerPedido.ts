@@ -86,3 +86,50 @@ export function leerPedido(texto: string, odontologos: { id: string; claves: str
   }
   return r
 }
+
+// --- Las indicaciones: lo que escribió el odontólogo y no son datos de la ficha ------------------------
+
+/** Palabras que no dicen nada por sí solas: si una frase solo tiene estas y datos de la ficha, no es una indicación. */
+const RELLENO = new Set(['de', 'del', 'la', 'el', 'las', 'los', 'un', 'una', 'para', 'con', 'por', 'que', 'y', 'en', 'al', 'se', 'lo', 'le', 'me', 'te', 'mi', 'es', 'son', 'hay', 'si', 'ya', 'a', 'o', 'e', 'u', 'no', 'muy', 'mas', 'más'])
+
+/** Los fragmentos que `leerPedido` ya llevó a un campo (pieza, color, material, trabajo, día, paciente) y los saludos. */
+const DATOS_YA_CARGADOS: RegExp[] = [
+  /\b(?:hola|buen[oa]s?|d[ií]as?|tardes?|noches?|gracias|saludos|abrazo|dr\.?|dra\.?|doc|doctor[a]?|lab|laboratorio)\b/gi,
+  /\b(?:te|les?)\s+(?:mando|env[ií]o|paso|dejo|adjunto)\b/gi,
+  /\b(?:corona|carilla|incrustaci[oó]n|inlay|onlay|puente|placa|implante|mu[ñn][oó]n|tallad[oa]|escaneo|scan|archivos?|stl|ply)\b/gi,
+  /\b(?:zirconi[oa]|zirconio|disilicato|e\.?max|metalo\s?cer[aá]mic[ao]|metal-?cer|monol[ií]tic[ao])\b/gi,
+  /\b(?:pieza|pza\.?|diente|molar|premolar|incisivo|canino)\s?\d{0,2}\b/gi,
+  /\b[1-4][1-8]\b/g,
+  /\bcolor\b|\b[ABCD]\s?[1-4](?:[.,]5)?\b/gi,
+  /\b(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|ma[ñn]ana|hoy|urgente|entrega|para el)\b/gi,
+  /\b(?:paciente|de|para)\s+[A-ZÁÉÍÓÚÑ]\.\s?[A-ZÁÉÍÓÚÑ]\./g,
+  /\b[A-ZÁÉÍÓÚÑ]\.\s?[A-ZÁÉÍÓÚÑ]\./g,
+  /\d+(?:[.,]\d+)?\s?mm\b/gi,
+  /\b(?:nobel|straumann|neodent|biohorizons|zimmer|mis|osstem|rosterdent|cono morse|hex[aá]gono)\b/gi,
+]
+
+/**
+ * Las frases del mensaje que traen algo más que los datos que ya leímos: la encía, los dientes vecinos, cómo
+ * lo quiere, molestias, lo que hay que cuidar. Es una ayuda para no retipear: quien carga las revisa y las
+ * corrige antes de crear el caso (y el mensaje completo se guarda aparte, tal cual llegó).
+ * Una frase se queda si, sacados los datos ya cargados y las palabras de relleno, le quedan 2 palabras o más.
+ */
+export function indicacionesDelMensaje(texto: string): string {
+  const sinCabecera = texto
+    .normalize('NFC')
+    // "[13/11 10:01] Dr. Pérez: " de WhatsApp, o "Dr. Pérez:" al principio de una línea.
+    .replace(/^\s*\[[^\]]*\][^:\n]{0,40}:\s*/gm, '')
+    .replace(/\r/g, '')
+  const frases = sinCabecera
+    // Se corta después del punto (que queda en su frase) y no en las iniciales ("J. G.", mayúscula antes del punto).
+    .split(/\n+|(?<=[a-záéíóúñ0-9)][.!?]+)\s+(?=[A-ZÁÉÍÓÚÑ¿¡])/)
+    .map((f) => f.trim())
+    .filter(Boolean)
+  const quedan = frases.filter((f) => {
+    let resto = f
+    for (const re of DATOS_YA_CARGADOS) resto = resto.replace(re, ' ')
+    const palabras = resto.toLowerCase().match(/[a-záéíóúñü]{3,}/g) ?? []
+    return palabras.filter((p) => !RELLENO.has(p)).length >= 2
+  })
+  return quedan.join(' ').replace(/\s+/g, ' ').trim()
+}

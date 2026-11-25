@@ -185,7 +185,7 @@ function EtapaMini({ c }: { c: Caso }) {
   const t = c.trabajos[0]
   const etapas = nombresEtapas(t)
   const etapa = indiceEtapa(t)
-  const frenado = !!c.cambio_pendiente
+  const frenado = !!c.cambio_pendiente || c.pausado
   return (
     <span className="flex items-center gap-2" title={`Etapa ${Math.min(etapa + 1, etapas.length)} de ${etapas.length}`}>
       <span aria-hidden className="hidden gap-[3px] md:flex">

@@ -20,10 +20,24 @@ from .validadores import normalizar_color, validar_piezas
 
 class EtapaSerializer(serializers.ModelSerializer):
     hecha_por = serializers.CharField(source='hecha_por.usuario.nombre_visible', default=None, read_only=True)
+    #: Cuándo y quién tocó "Iniciar" (S13); vacío hasta que alguien lo hace.
+    iniciada = serializers.DateTimeField(source='iniciada_en', read_only=True)
+    iniciada_por = serializers.CharField(source='iniciada_por.usuario.nombre_visible', default=None, read_only=True)
 
     class Meta:
         model = EtapaTrabajo
-        fields = ['orden', 'nombre', 'rol', 'en_consultorio', 'estado', 'inicio', 'fin', 'hecha_por']
+        fields = [
+            'orden',
+            'nombre',
+            'rol',
+            'en_consultorio',
+            'estado',
+            'inicio',
+            'fin',
+            'hecha_por',
+            'iniciada',
+            'iniciada_por',
+        ]
         read_only_fields = fields
 
 
@@ -150,6 +164,9 @@ class CasoSerializer(serializers.ModelSerializer):
             'cambio_pendiente',
             'en_espera',
             'espera_desde',
+            'pausado',
+            'pausa_desde',
+            'pausa_motivo',
             'orden_origen',
             'orden_numero',
             'orden_fecha',
@@ -339,10 +356,53 @@ class AvanzarView(LaboratorioScopedMixin, APIView):
         return get_object_or_404(caso.trabajos, pk=trabajo_id)
 
 
+class IniciarView(LaboratorioScopedMixin, APIView):
+    @extend_schema(request=None, responses=CasoSerializer)
+    def post(self, request, pk, trabajo):
+        caso = self.get_scoped_object(request, Caso, pk=pk)
+        servicios.iniciar_etapa(request, get_object_or_404(caso.trabajos, pk=trabajo))
+        return Response(CasoSerializer(get_caso(self, request, pk)).data)
+
+
+class ProblemaSerializer(serializers.Serializer):
+    texto = serializers.CharField(max_length=1000, allow_blank=True)
+
+
+class ProblemaView(LaboratorioScopedMixin, APIView):
+    @extend_schema(request=ProblemaSerializer, responses={201: CasoSerializer})
+    def post(self, request, pk, trabajo):
+        caso = self.get_scoped_object(request, Caso, pk=pk)
+        datos = ProblemaSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        obra = get_object_or_404(caso.trabajos, pk=trabajo)
+        servicios.reportar_problema(request, obra, datos.validated_data['texto'])
+        return Response(CasoSerializer(get_caso(self, request, pk)).data, status=status.HTTP_201_CREATED)
+
+
 class EntregarView(LaboratorioScopedMixin, APIView):
     @extend_schema(request=None, responses=CasoSerializer)
     def post(self, request, pk):
         servicios.entregar(request, self.get_scoped_object(request, Caso, pk=pk))
+        return Response(CasoSerializer(get_caso(self, request, pk)).data)
+
+
+class PausarSerializer(serializers.Serializer):
+    motivo = serializers.CharField(max_length=200, allow_blank=True)
+
+
+class PausarView(LaboratorioScopedMixin, APIView):
+    @extend_schema(request=PausarSerializer, responses=CasoSerializer)
+    def post(self, request, pk):
+        datos = PausarSerializer(data=request.data)
+        datos.is_valid(raise_exception=True)
+        servicios.pausar(request, self.get_scoped_object(request, Caso, pk=pk), datos.validated_data['motivo'])
+        return Response(CasoSerializer(get_caso(self, request, pk)).data)
+
+
+class ReanudarView(LaboratorioScopedMixin, APIView):
+    @extend_schema(request=None, responses=CasoSerializer)
+    def post(self, request, pk):
+        servicios.reanudar(request, self.get_scoped_object(request, Caso, pk=pk))
         return Response(CasoSerializer(get_caso(self, request, pk)).data)
 
 

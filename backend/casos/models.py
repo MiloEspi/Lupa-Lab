@@ -79,6 +79,11 @@ class Caso(ModeloDeLaboratorio):
     #: Como el cambio sin confirmar, es una marca que frena, no un estado del caso.
     en_espera = models.BooleanField(default=False)
     espera_desde = models.DateTimeField(null=True, blank=True)
+    #: Pausa manual de Recepción o Supervisión (falta definir algo, el paciente reprograma, etc.).
+    #: También es una marca que frena, no un estado: el caso sigue abierto y no avanza hasta reanudarlo.
+    pausado = models.BooleanField(default=False)
+    pausa_desde = models.DateTimeField(null=True, blank=True)
+    pausa_motivo = models.CharField(max_length=200, blank=True)
 
     class Meta:
         ordering = ['-numero']
@@ -151,6 +156,12 @@ class EtapaTrabajo(models.Model):
     inicio = models.DateTimeField(null=True, blank=True)
     fin = models.DateTimeField(null=True, blank=True)
     hecha_por = models.ForeignKey(
+        'cuentas.Membresia', on_delete=models.PROTECT, null=True, blank=True, related_name='+'
+    )
+    #: `inicio` es cuándo la etapa llegó a quien la tiene; esto es cuándo esa persona
+    #: tocó "Iniciar" (S13). La diferencia es la espera en la fila, que es lo que mide el piloto.
+    iniciada_en = models.DateTimeField(null=True, blank=True)
+    iniciada_por = models.ForeignKey(
         'cuentas.Membresia', on_delete=models.PROTECT, null=True, blank=True, related_name='+'
     )
 
